@@ -1,0 +1,322 @@
+---
+title: "HW1-1 공공데이터포털 데이터 다뤄보기"
+author: "강현승"
+date: "2022-10-17"
+output: html_document
+---
+
+```{r}
+DEBUG = F # 보고용
+```
+
+## 문제 1
+
+```{r}
+# install.packages('xml2')
+library(xml2)
+
+serviceKey = 'MlB2k1cGG%2BUDm0OzU5rF8b8ESs7u1y2mmBmt6E%2BOeHdAg5mO%2F7bx1dJDMPqCA2LgAe2E2H9jaodeKzU8IbFr4g%3D%3D'
+numOfRows = 10
+pageNo = '0'
+chrstnType = ''
+filterValues = ''
+dataType = 'xml'
+url_xml = paste0(
+  'https://apis.data.go.kr/3740000/suwonEvChrstn/getdatalist?serviceKey=' ,
+  serviceKey,
+  '&numOfRows=',
+  numOfRows,
+  '&pageNo=',
+  pageNo,
+  '&sortKey=',
+  chrstnType,
+  '&filterKey=',
+  chrstnType,
+  '&filterValues=',
+  filterValues,
+  '&type=',
+  dataType
+)
+
+# urls 링크를 xml로 읽어들이기.
+# read xml(): xml 파일 읽어들이기.
+raw_xml <- read_xml(url_xml)
+
+# occrrnc0t. dataVall 변수 모두 찾아서 저장하기
+# xml_find_all(): xml 파일에서 원하는 '태그'를 찾아 저장.
+
+xml_1 <- xml_find_all(raw_xml, '//chrstnNm')
+xml_2 <- xml_find_all(raw_xml, '//latitude')
+xml_3 <- xml_find_all(raw_xml, '//longitude')
+xml_4 <- xml_find_all(raw_xml, '//charger_status')
+
+# text로 읽어 저장하기
+# xml text( :) 텍스트 추출.
+chrstnNm <- xml_text(xml_1)
+latitude <- xml_text(xml_2)
+longitude <- xml_text(xml_3)
+charger_status <- xml_text(xml_4)
+```
+
+## 문제 2
+
+```{r}
+df = data.frame(
+  chrstnNm = chrstnNm,
+  latitude = latitude,
+  longitude = longitude,
+  charger_status = charger_status
+)
+head(df)
+```
+
+## 문제 3
+
+```{r}
+str(df)
+# 문제점) 위도(latitude)와 경도(longitude)를 character형에서 numeric으로 변경하여야.
+df$latitude = as.numeric(df$latitude)
+df$longitude = as.numeric(df$longitude)
+str(df) # df가 고쳐졌는지 확인
+```
+
+## 문제 4
+
+```{r}
+# for 구문이 돌면서 여기에 추가로 계속 저장함
+df = data.frame()
+# 0 번째 페이지부터 11 번째 페이지까지 데이터를 가져오고자 함
+# 따라서 for 구문으로 0 부터 11 까지 반복되는 pageNo 변수를 가짐
+for (pageNo in 0:11) {
+  numOfRows = 10
+  dataType = 'xml'
+  url_xml = paste0(
+    'https://apis.data.go.kr/3740000/suwonEvChrstn/getdatalist?serviceKey=' ,
+    serviceKey,
+    '&pageNo=',
+    pageNo,
+    '&type=',
+    dataType,
+    '&numOfRows=',
+    numOfRows,
+    '&sortKey=&filterKey=&filterValues='
+  )
+  raw_xml <- read_xml(url_xml)
+  xml_1 <- xml_find_all(raw_xml, '//chrstnNm')
+  xml_2 <- xml_find_all(raw_xml, '//latitude')
+  xml_3 <- xml_find_all(raw_xml, '//longitude')
+  xml_4 <- xml_find_all(raw_xml, '//charger_status')
+  chrstnNm <- xml_text(xml_1)
+  latitude <- as.numeric(xml_text(xml_2))
+  longitude <- as.numeric(xml_text(xml_3))
+  charger_status <- xml_text(xml_4)
+  # 위의 변수인 df 에 rbind, 즉 행 추가를 통해 이번 for 구문을 통해 가져온 데이터를 추가함
+  df = rbind(
+    df,
+    list(
+      chrstnNm = chrstnNm,
+      latitude = latitude,
+      longitude = longitude,
+      charger_status = charger_status
+    )
+  )
+}
+str(df)
+head(df)
+```
+
+## 문제 5
+
+```{r}
+fetch_xml_until_page_df = function(totalPage) {
+  df = data.frame()
+  for (pageNo in 0:(totalPage - 1)) {
+    numOfRows = 10
+    dataType = 'xml'
+    url_xml = paste0(
+      'https://apis.data.go.kr/3740000/suwonEvChrstn/getdatalist?serviceKey=' ,
+      serviceKey,
+      '&pageNo=',
+      pageNo,
+      '&type=',
+      dataType,
+      '&numOfRows=',
+      numOfRows,
+      '&sortKey=&filterKey=&filterValues='
+    )
+    raw_xml <- read_xml(url_xml)
+    xml_1 <- xml_find_all(raw_xml, '//chrstnNm')
+    xml_2 <- xml_find_all(raw_xml, '//latitude')
+    xml_3 <- xml_find_all(raw_xml, '//longitude')
+    xml_4 <- xml_find_all(raw_xml, '//charger_status')
+    chrstnNm <- xml_text(xml_1)
+    latitude <- as.numeric(xml_text(xml_2))
+    longitude <- as.numeric(xml_text(xml_3))
+    charger_status <- xml_text(xml_4)
+    df = rbind(
+      df,
+      list(
+        chrstnNm = chrstnNm,
+        latitude = latitude,
+        longitude = longitude,
+        charger_status = charger_status
+      )
+    )
+  }
+  return(df)
+}
+my_df = fetch_xml_until_page_df(2)
+str(my_df)
+head(my_df)
+```
+
+## 문제 6
+
+```{r}
+# install.packages('jsonlite')
+# install.packages('httr')
+library(rjson)
+library(httr)
+
+fetch_json_to_df = function(pageNo) {
+  numOfRows = 10
+  dataType = 'json'
+  url_json = paste0(
+    'https://apis.data.go.kr/3740000/suwonEvChrstn/getdatalist?serviceKey=' ,
+    serviceKey,
+    '&pageNo=',
+    pageNo,
+    '&type=',
+    dataType,
+    '&numOfRows=',
+    numOfRows,
+    '&sortKey=&filterKey=&filterValues='
+  )
+  dfQueue = data.frame()
+  # View(fromJSON(url_json))
+  deserializedItems = fromJSON(url_json)[['items']]
+  deserializedItems$latitude = as.numeric(deserializedItems$latitude)
+  deserializedItems$longitude = as.numeric(deserializedItems$longitude)
+  dfQueue = rbind(dfQueue,
+                  deserializedItems[c('chrstnNm', 'latitude', 'longitude', 'charger_status')])
+  return(dfQueue)
+}
+
+df = data.frame()
+# 어떻게 사용자가 0부터 입력하도록 유도할 수 있나? api 문서?
+for (pageNo in 0:13) {
+  df = rbind(df, fetch_json_to_df(pageNo))
+}
+str(df)
+head(df)
+```
+
+## 문제 7
+
+```{r}
+#install.packages('leaflet')
+library(leaflet)
+
+my_map = leaflet()
+my_map_1 = addTiles(my_map)
+my_map_2 = addMarkers(
+  my_map_1,
+  lng = df$longitude,
+  lat = df$latitude,
+  popup = df$chrstnNm
+)
+my_map_2
+```
+
+## 문제 8
+
+기초자치단체 별 음식물쓰레기 종합배출내역 활용
+
+```{r}
+
+# 음식물쓰레기 종합배출내역 API 접근을 위한 API 인증키
+waste_api_key = 'MlB2k1cGG%2BUDm0OzU5rF8b8ESs7u1y2mmBmt6E%2BOeHdAg5mO%2F7bx1dJDMPqCA2LgAe2E2H9jaodeKzU8IbFr4g%3D%3D'
+
+# API가 지원하는 시군구 목록 가져오는 주소 Url
+waste_domestic_code_fetch_url = paste0(
+  'https://apis.data.go.kr/B552584/RfidFoodWasteServiceNew/getCityList?serviceKey=',
+  waste_api_key,
+  '&type=xml&page=1&rowNum=10000'
+)
+
+
+# 위에서 xml을 해석하기 위한 코드를 재사용
+
+raw_waste_domestic_code_xml <-
+  read_xml(waste_domestic_code_fetch_url)
+xml_1 <- xml_find_all(raw_waste_domestic_code_xml, '//cityCode')
+xml_2 <- xml_find_all(raw_waste_domestic_code_xml, '//citySidoName')
+xml_3 <- xml_find_all(raw_waste_domestic_code_xml, '//citySggName')
+cityCode <- xml_text(xml_1)
+citySidoName <- xml_text(xml_2)
+citySggName <- xml_text(xml_3)
+
+# 찾은 xml 태그의 데이터를 데이터프레임에 인입
+waste_df = data.frame(cityCode = cityCode,
+                      citySidoName = citySidoName,
+                      citySggName = citySggName)
+
+waste_quantities = c()
+# 위에서 찾은 음식물쓰레기 집계 API가 지원하는 시군구 코드를 for 문으로 반복
+# 이를 반복함으로써 도시 별 음식물쓰레기 배출량을 가져올 수 있음
+# 아래 xml 해석 코드 또한 제시되었던 코드를 재사용
+for (i in 1:length(cityCode)) {
+  disYear = '2022'
+  disMonth = '08'
+  waste_quantity_fetch_url = paste0(
+    'https://apis.data.go.kr/B552584/RfidFoodWasteServiceNew/getCityDateList?serviceKey=',
+    waste_api_key,
+    '&type=xml&disYear=',
+    disYear,
+    '&disMonth=',
+    disMonth,
+    '&cityCode=',
+    cityCode[i],
+    '&page=1&rowNum=31'
+  )
+  raw_waste_quantity_xml <- read_xml(waste_quantity_fetch_url)
+  xml_1 <- xml_find_all(raw_waste_quantity_xml, '//disQuantity')
+
+  # 일 별로 데이터가 나오기 때문에 한 달치를 모두 더하기 위해 disQuantity의 값을 모두 더해 waste_quantities에 계속 추가함
+  waste_quantities = append(waste_quantities, sum(as.numeric(xml_text(xml_1))))
+}
+
+# 시군구 데이터를 넣었던 waste_df 데이터프레임에 새로운 열을 추가해 disQuantities 열에 시군구 별 데이터의 벡터인 waste_quantities의 데이터를 인입
+waste_df = cbind(waste_df, data.frame(disQuantity = waste_quantities))
+str(waste_df)
+head(waste_df)
+```
+
+## 문제 9
+
+```{r}
+# 2022/08 기초자치단체 별 배출량 평균 
+# 평균을 계산하는 r의 base함수인 mean 함수를 사용
+mean(waste_df$disQuantity)
+# 2022/08 한 달 간 배출량이 가장 많은 기초자치단체
+# 최대값을 구하는 r의 base함수인 max를 사용
+waste_df[waste_df$disQuantity == max(waste_df$disQuantity),]
+# 2022/08 한 달 간 배출량이 가장 적은 기초자치단체, 0을 제외하고 = RFID를 통한 음식물쓰레기 집계를 하지 않는 기초자치단체를 제외
+# min 함수를 사용하되, 집계가 0인 데이터는 빼고 출력함
+waste_df[waste_df$disQuantity == min(waste_df$disQuantity[waste_df$disQuantity != 0]),]
+# 광역자치단체 별 합계 내역 출력
+# 광역자치단체의 이름은 시군구와 다르게 중복된다. 따라서 factor를 이용하여 중복값을 제거, 유일한 광역자치단체의 이름 목록을 아까 만든 factor의 levels를 사용하여 구할 수 있다.
+# 이렇게 구한 광역자치단체 이름 목록을 for 구문을 통해 반복, 위의 disQuantityBySido의 데이타프레임에 시도명과 광역자치단체 이름을 통해 waste_df 데이타프레임에서 일치하는 행들의 집계량 총합을 cbind를 통해 더해나가는 작업인 것이다.
+disQuantityBySido = data.frame()
+for (sidoName in levels(factor(waste_df$citySidoName))) {
+  disQuantityBySido = rbind(disQuantityBySido,
+                            list(
+                              citySidoName = sidoName,
+                              disQuantity = sum(waste_df[waste_df$citySidoName == sidoName, ]$disQuantity)
+                            ))
+}
+disQuantityBySido
+# 2022/08 한 달 간 배출량이 가장 적게 집게된 광역자치단체
+# 바로 위에서 작업한 disQuantityBySido의 행들 중 disQuantity가 개중에 가장 작은 행을 표시
+disQuantityBySido[disQuantityBySido$disQuantity == min(disQuantityBySido$disQuantity),]
+```

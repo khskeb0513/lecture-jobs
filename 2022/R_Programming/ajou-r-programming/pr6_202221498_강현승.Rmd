@@ -1,0 +1,344 @@
+---
+title: "pr6 조건문과 반복문"
+author: "강현승"
+date: "2022-10-13"
+output: html_document
+---
+
+# 조건문과 반복문
+
+## 1. 반복문
+동일한 연산을 여러번 반복하고 싶을 때 사용합니다.
+
+### 1.1 for()
+데이터를 순서대로 1로 받아서 사용함
+
+```{r}
+a = c(1, 2, 4)
+a
+
+for (i in a)
+  print(i) # i에 a를 넣어 프린트
+for (i in c(1, 2, 4))
+  # i에 1, 2, 4를 넣어 프린트
+  print(i)
+
+string = c("test", "for", "for()")
+for (i in string)
+  print(1)
+
+for (i in c("test", "for", "for()"))
+  print(i)
+```
+
+- for문에서 {} 없이 연산을 할 경우, for문에 첫 명령문만 반복되고 그 다음 줄은 별개의 코드로 인식
+
+```{r}
+for(i in 1:3)
+  # i에 1 ~ 3 넣고 출력
+  print(i)
+
+print("다음줄")
+
+print(i + 1
+)
+```
+
+- 여러 연산을 같이 반복하고 싶다면 {}안에 명령문을 작성해야 함
+
+```{r}
+for(i in 1:3) {
+  print(i)
+  print("다음줄")
+  print(i + 1)
+} # i에 1 ~ 3 넣어서 아래 3 줄 반복 출력.
+```
+
+- 응용, vector J의 짝수 번 째 데이터들만 출력하기
+
+```{r}
+j = 1:6
+for (i in seq(2, 6, by = 2)) {
+  # j의 짝수 번 순서
+  print(paste0(i, " 번째 데이터:"))
+  # 짝수 번째 데이터만 불러와짐
+  print(j[i])
+}
+```
+
+- 꼭 i를 쓰지 않아도 됨
+
+```{r}
+for(a in 1:10)
+  print(a)
+
+```
+
+- break라는 명령어를 수행하면 반복문은 종료됨
+
+```{r}
+for(i in 1:10) {
+  print(i)
+  break
+}
+```
+
+### 1.2 while() 문
+while문은 조건식과 같이 사용, 주어진 조건식이 참 일 경우 반복 수행
+while(조건){명령문}: 조건이 참일 때 명령문을 실행
+주의사항: 조건이 계속 참이면 무한 반복이 발생함
+
+```{r}
+i = 1
+while (i < 5) {
+  print(i)
+  i = i + 1
+} # i가 5보다 작을 때까지 while loop
+```
+
+### 1.3 repeat
+- 반복과 정지에 대한 조건문을 활용하여 명령문을 반복함
+```{r}
+i = 1
+repeat {
+  i = i + 30
+  if (i > 100)
+    break
+  print(i)
+} # i가 100보다 크면 루프 탈출하는 반복.
+```
+
+## 2. 조건문
+### 2.1 if문과 if-else문
+- 'if(조건식)연산'의 방법으로 사용
+- 단순 if문은 "if(조건)명령문"의 형태로 작성
+```{r}
+x = 80
+if (x<=90)
+  print("B") # x가 90이하면 B출력
+if (x<=80)
+  print("C") # x가 80이하면 C출력
+```
+
+- 여러 개의 명령문을 수행할땐 {} 연산자 사용
+- 명령문 추가줄 줄바꿈하여 작성
+
+```{r}
+x = 91
+if (x > 90) {
+  print("B")
+  x = x + 10
+  print(x)
+}
+```
+
+- 단순 if-else문은 "if(조건){조건이참일때명령문}else{조건이거짓일때명령문}"의 형태로 작성
+```{r}
+x = 91
+if (x <= 90) print("B") else print("C") # x가 90이하면 B 출력 아니면 C 출력
+if (x < 90) {
+  print("B")
+  x = x + 10
+} else {
+  print("C")
+} # x가 90보다 작으면 B 아니면 C 출력
+```
+
+if와 else를 사용해서 2개 이상의 조건문을 만들고 싶을 때 else if 를사용
+else if는 else인 조건 상황에서 다시 if문 조건을 쓸 때 사용
+
+```{r}
+x = 100
+if (x < 70) {
+  print("F")
+} else if (x < 80) {
+  print("C")
+} else if (x < 90) {
+  print("B")
+} else {
+  print("A")
+} #x = 100인 상태로 70보다 작으면F, 70 ~ 80보다 작으면 C 80 ~ 90보다 작으면 B 아니면 A
+```
+
+### 2.2 if else
+한 줄의 명령문으로 조건이 참일 때와 거짓일 때 따라 명령문을 수행
+if else (조건식, 참일 때 실행할 내용, 거짓일 때 실행할 내용)
+
+```{r}
+x = 10
+ifelse(x > 5, x + 5, x - 5)
+```
+
+## 3. 조건문과 반복문 함께 사용하기
+- x의 데이터 중 짝수만 출력하도록 함
+```{r}
+x = 1:10 # x에 1 ~ 10의 값을 할당
+for (i in x) {
+  # i에 x의 값을 차례대로 넣어서
+  if (i %% 2 == 0) {
+    # 그 값이 2로 나눠 떨어지면 (짝수이면)
+    print(i) # 그 값을 출력
+  }
+}
+```
+
+## 4. 중첩된 반복문
+
+```{r}
+x = matrix(1:6, 2, 3)
+x
+for (i in seq_len(nrow(x))) {
+  for (j in seq_len(ncol(x))) {
+    print(x[i, j])
+  }
+}
+
+```
+
+```{r}
+mat = matrix(0, nrow = 5, ncol = 5)
+mat
+for (i in 1:nrow(mat)) {
+  for (j in 1:ncol(mat)) {
+    mat[i, j] = sample(1:100, 1, replace = TRUE) 
+  }
+}
+
+mat
+```
+
+# 연습문제
+
+## 연습문제 1 - 2
+
+```{r}
+library(httr)
+library(rvest)
+title = c()
+info = c()
+for (page_num in 1:4) {
+  url <-
+    paste0(
+      'https://www.aladin.co.kr/shop/wbrowse.aspx?BrowseTarget=List&ViewRowsCount=25&ViewType=Detail&PublishMonth=0&SortOrder=2&page=',
+      page_num,
+      '&Stockstatus=1&PublishDay=84&CID=437&SearchOption='
+    )
+  web_source <- GET(url) # GET 함수를 이용해 웹 페이지의 문서를 가져온다.
+  my_html <- read_html(web_source) # read_html 함수를 이용하여 html 내용을 읽어온다.
+  ## 제목 정보
+  title_nodes <-
+    html_nodes(my_html, 'a.bo3 > b') # 제목 정보가 있는 노드를 가져온다.
+  title_text <- html_text(title_nodes) # 제목 텍스트를 저장한다.
+  ## 책 정보
+  info_nodes <- html_nodes(my_html, 'div.ss_book_list > ul > li')[3]
+  info_text <- html_text(info_nodes)
+  
+  my_book_info_nodes = html_nodes(my_html, 'div.ss_book_list > ul > li')
+  title = append(title, title_text)
+  my_book_info_raw_strings = my_book_info_nodes[grep('wSearchResult', my_book_info_nodes)]
+  for (rawStrings in my_book_info_raw_strings) {
+    info = append(info, html_text(rawStrings))
+  }
+}
+
+str(title) # title 엿보기
+str(info) # info 엿보기
+head(title) # title 초입 보기
+head(info) # info 초입 보기
+
+books_data = data.frame(list(title = title, info = info))
+str(books_data) # books_data 엿보기
+head(books_data) # books_data 초입 보기
+```
+
+## 도전문제 1
+
+```{r}
+print('n=4 인 경우')
+
+n = 4
+for (i in 1:n) {
+  myStrings = c(rep('*', i - 1), rep('-', n - i), rep('-', n - i), rep('*', i - 1))
+  # for (j in (n - 1):1) {
+  #   myStrings = append(myStrings, myStrings[j])
+  # }
+  print(myStrings)
+}
+
+print('n=5 인 경우')
+
+n = 5
+for (i in 1:n) {
+  myStrings = c(rep('*', i - 1), rep('-', n - i))
+  for (j in (n - 1):1) {
+    myStrings = append(myStrings, myStrings[j])
+  }
+  print(myStrings)
+}
+
+print('n=6 인 경우')
+
+n = 6
+for (i in 1:n) {
+  myStrings = c(rep('*', i - 1), rep('-', n - i))
+  for (j in (n - 1):1) {
+    myStrings = append(myStrings, myStrings[j])
+  }
+  print(myStrings)
+}
+```
+
+## 도전문제 2
+
+```{r}
+num = 26
+if (num < 10) {
+  num = num * 10
+}
+num
+maked = num # num을 maked에 copy
+repeated_num = 0 # repeat 문 반복 횟수: 사이클의 길이로 볼 수 있음
+repeat {
+  very_right_num = as.numeric(strsplit(as.character(maked), '')[[1]]) # maked를 character화하여 한 글자 씩 분리, 이를 다시 numeric화.
+  very_right_num = very_right_num[length(very_right_num)] # very_right_num의 마지막 원소를 very_right_num에 대입
+  splited_sum = as.numeric(strsplit(as.character(sum(
+    as.numeric(strsplit(as.character(maked), '')[[1]])
+  )), '')[[1]])
+  maked = very_right_num * 10 + splited_sum[length(splited_sum)]
+  print(maked)
+  repeated_num = repeated_num + 1
+  if (num == maked) {
+    break
+  }
+}
+print(paste0('num=',
+             num,
+             '의 사이클 길이는 ',
+             repeated_num, ' 입니다. 감사합니다.'))
+```
+
+## 도전문제 3
+
+```{r}
+library(stringr)
+text = '가나다라마바사아자차카타파하'
+texts = c()
+for (i in 1:(nchar(text) %/% 10)) {
+  texts = append(texts, substr(text, (i - 1) * 10 + 1, i * 10))
+}
+texts = append(texts, substr(text, nchar(text) - nchar(text) %% 10 + 1, nchar(text)))
+for (myText in texts) {
+  print(myText)
+}
+```
+```{r}
+texts = c()
+while (nchar(text) > 10) {
+  texts = append(texts, substr(text, 0, 10))
+  text = substr(text, 11, length(strsplit(text, '')[[1]]))
+}
+texts = append(texts, text)
+for (text_by_ten in 1:length(texts)) {
+  print(texts[text_by_ten])
+}
+```

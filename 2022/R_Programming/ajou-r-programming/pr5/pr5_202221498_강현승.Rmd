@@ -1,0 +1,345 @@
+---
+title: "PR5 - Data.Frame"
+author: "강현승"
+date: '2022 10 7 '
+output: html_document
+---
+
+#Dataframe
+
+## 1. 벡터를 이용해 데이터 프레임 만들기
+
+data.frame 함수를 사용하여 데이터 프레임 만들기
+stringsAsFactors 인수에 T값을 할당하면 각 열이 factor형으로 저장됨
+R version 4 이후부터는 Default 값이 F이다.
+
+```{r}
+name <- c("Boil", "Tom", "Ravindra", "Bob", "Sobia")
+gender <- c("M", "M", "F", "M", "F")
+age <- c(17, 21, 33, 12, 37)
+marriage <- c(F, T, F, F, T)
+
+# stringsAsFactors = T 사용해서 만들기
+customer <- data.frame(name, gender, age, marriage, stringsAsFactors = T)
+str(customer)
+
+# stringsAsFactors 인수 없이 만들기
+customer <- data.frame(name, gender, age, marriage)
+str(customer)
+
+# data.frame 함수와 관련된 다양한 함수 사용하기
+str(customer) # 데이터 프레임의 구조를 확인
+names(customer) # 데이터 프레임의 열 이름을 확인
+rownames(customer) # 데이터 프레임의 행 이름을 확인
+```
+
+## 2. DataFrame 변수명 바꾸기
+
+```{r}
+# colnames, rownames 함수로 변수명 변환 및 확인
+
+
+colnames(customer)
+rownames(customer)
+
+colnames(customer) <- c("cust_name", "cust_gend", "cust_age", "cust_mrg")
+rownames(customer) <- c('a', 'b', 'c', 'd', 'e')
+customer
+```
+
+## 3. DataFrame 데이터 추출
+
+```{R}
+# 접근 방식은 matrix와 동일
+# [행,열] 연산자 및 $ 연산자 활용하여 데이터에 접근하기
+customer[1,]
+customer["a",] # 첫 번째 행 숫자 및 rowname으로 추출
+
+customer[customer$cust_name == "Tom",] # cust_name 컬럼이 Tom인 row만 추출
+
+customer[2:5,]
+customer[-1,] # 2 ~ 5 행
+
+customer[customer$cust__name != "Tom",] # cust_name 컬럼이 Tom이 아닌 row
+
+customer[c("b", "c"),]
+```
+
+## 4. DataFrame에 데이터 추가
+
+```{r}
+# 이름으로 추가
+customer$cust_height <- c("185", "165", "156", "174", "155")
+customer["f",] <- list("Jack", "M", 50, T, "167")
+customer
+
+# cbind, rbind로 추가
+customer <- cbind(customer, weight = c(80, 70, 65, 48, 55, 100))
+customer <- rbind(customer, g = list("Merry", "F", 42, F, "172", 60))
+customer <- rbind(customer, h = c("Meerry", "F", 42, F, "172", 60))
+customer
+```
+
+## 5. DataFrame에 데이터 삭제
+
+```{R}
+customer <- customer[, -5] # 1 번째 컬럼을 빼고 나머지만 다시 할당
+customer <- customer[-7,] # 7 번째 로우를 빼고 나머지만 다시 할당
+customer$weight <- NULL # weight 컬럼 삭제
+```
+
+## 6. Data 조건문을 활용해 조작하기
+
+```{r}
+# 이 부분은 모든 코드에 주석 달 것!
+# &와 | 연산자로 여러 개의 조건을 사용할 수 있음
+
+customer[customer$cust_gend == "M",]
+customer[customer$cust_gend != "F",]
+nrow(customer[customer$cust_gend == "M",]) # nrow는 행의 개수를 보여줌
+customer[customer$cust_name == "Bob", c("cust_age", "cust_mrg")]
+customer[customer$cust_name == "Tom" |
+           customer$cust_name == "Ravindra",]
+customer[customer$cust_gend == "M" & customer$cust_age > 24,]
+```
+
+## 7. Dataframe 정렬하기
+
+```{r}
+# order함수를 활용해 순서를 구하여, row조건에 넣어서 정렬
+# decreasing = T 인수를 활용하여 오름차순, 내림차순 변경 가능
+order(customer$cust_age) # order함수로 age에 대한 순서를 구함
+customer[order(customer$cust_age),] # row의 조건에 위에서 구한 순서를 넣음
+order(customer$cust_age, decreasing = F) # 오름차순
+customer[order(customer$cust_age, decreasing = F),]
+```
+
+## 8. Dataframe 기타 함수
+
+```{r}
+# head, tail함수는 데이터 프레임이 상위, 하위 row를 출력함
+# 기본 6 개를 출력하며, row 수를 지정할 수 있음
+head(customer) # 상위 6 개 row
+head(customer, 2) # 상위 2 개 row
+tail(customer,) # 하위 2 개 row
+```
+
+# 파일 입출력
+## 1. 내장 데이터 불러오기
+
+```{r}
+# MASS 패키지에는 다양한 데이터가 들어있음
+# install.packages("MASS")
+library(MASS)
+
+# iris 데이터 셋
+# 붓꽃의 종과 Sepal과 Petal의 너비와 길이에 대한 데이터
+head(iris)
+str(iris)
+
+# mtcars 데이터 셋
+# 자동차 차종 별 상세 스펙에 대한 데이터
+head(mtcars)
+str(mtcars)
+
+# USArrests 데이터 셋
+# 1973년도 50개 주에서 수집된 범죄 기록 데이터
+head(USArrests)
+str(USArrests)
+```
+
+## 2. file로 저장된 데이터 불러오기
+```{r}
+# 블랙보드에서 실습과제에 첨부되어 있는 파일을 다운받아 사용할 것
+# setwd함수로 해당 작업폴더 지정해주기 /setwd("c:/PR")
+# 지정하지 않으면 내 문서가 기본 작업폴더
+# read.csv() 함수 (첫 행 컬럼명으로 사용) (첫 열 로우명으로 사용) "" (입력된 데이터를 구분해주는 기호)
+# / header = T / row.names = 1 / sep = ,
+# na.strings = c("Na", "nan") (NA 값으로 처리할 문자열 정의) / fileEncoding="UTF-8" (문자열을 특정 형식으로 재인코딩) / encoding = "UTF-8" (불러들일 file의 인코딩을 미리 선언)
+
+#그냥읽어오기
+csv <- read.csv("read_csv.csv", fileEncoding = 'EUC-KR')
+csv
+str(csv)
+
+# header, stringsAsFactors 사용
+# 불러온 데이터가 어떻게 바뀌는지 확인해보세요
+csv2 <- read.csv("read_csv.csv", header = F)
+csv2
+str(csv2)
+
+# 결측 값 처리하기
+# (".", "N.A.", "") 3 가지 문자를 모두 NA로 인식하도록 함
+csv3 <- read.csv("csv_NA.csv",
+                 header = F,
+                 na.strings = c(".", "N.A.", ""))
+csv3
+str(csv3)
+
+# 인코딩 문제 해결하기
+# 불러올 파일의 인코딩을 UTF-8로 지정
+csv4 <- read.csv(
+  "csv_NA.csv",
+  header = F,
+  stringsAsFactors = F,
+  encoding = "UTF-8"
+)
+csv4
+str(csv4)
+
+# read.table() 함수
+# table 형태로 저장된 2차원의 데이터를 불러옴
+# txt파일이나 CSV파일을 불러올 수 있음
+# 불러온 데이터는 데이터프레임으로 생성
+# read.csv() 함수와 동일하게 인수를 사용
+table <- read.table(
+  "read_csv.csv",
+  header = F,
+  sep = ",",
+  stringsAsFactors = F
+)
+head(table)
+```
+
+## 3. 웹에 있는 표를 읽어오기 readHTMLTable()
+
+```{r}
+# install.packages(c("XML","httr")) # 해당 패키지가 없다면 설치부터
+library(XML)
+
+url <- "https://www.worldometers.info/world-population/"
+
+library(httr)
+
+html_source <- GET(url) # html 전체 소스를 받아옴
+tabs <- readHTMLTable(rawToChar(html_source$content), stringsAsFactors =
+  F) # html의 콘텐츠 중에서 테이블만 추출
+
+world_pop <- tabs$popbycountry # 추출된 테이블들 중에서 원하는 테이블 선택 및 저장
+head(world_pop)
+```
+
+## 4. 데이터 저장하기
+
+```{r}
+# write.table 또는 write.csv 함수 사용
+# row.names = F는, 해당 인수를 T로 쥴 경우 행 이름이 첫 열로 이동하여 저장되기 때문
+table
+
+# write.table(table, "PR_table.csv")
+# write.table(table, "PR_table1.csv", row.names = F)
+# write.csv(table, "PR_table2.csv", row.names = F)
+```
+
+# 연습문제
+
+## 업종 카드소비 트렌드 데이터 설정
+
+```{r}
+Sys.setlocale('LC_ALL', 'C')
+Sys.setlocale('LC_ALL', 'en_US.UTF-8')
+Sys.setlocale('LC_CTYPE', 'en_US.UTF-8')
+data <- read.csv(("업종 카드소비 트렌드.csv"), encoding = 'UTF-8')
+data[which(is.na(data$agrde_code)), 'agrde_code']
+table(data$agrde_code)
+table(data$induty_nm)
+```
+
+## 연습 1
+
+```{r}
+data$agrde_code[is.na(data$agrde_code)] <- 0
+data$agrde_code <- factor(
+  data$agrde_code,
+  levels = c(0, 1, 2, 3, 4, 5, 6, 7),
+  labels = c(
+    '-',
+    '20대 미만',
+    "20세~29세",
+    '30세~39세',
+    '40세~49세',
+    '50세~59세',
+    '60세~69세',
+    '70세 이상'
+  ),
+
+)
+data$agrde_code[is.na(data$agrde_code)] <- '-'
+```
+
+## 연습 2
+
+```{r}
+korean_food <- factor(levels(factor(data$induty_nm)))
+korean_food <- data[data$induty_nm == '한식',]
+```
+
+## 연습 3
+
+```{r}
+head(korean_food[order(korean_food$setle_cascnt, decreasing = T),], 5)
+```
+
+## 연습 4
+
+```{r}
+levels(factor(korean_food[korean_food$agrde_code == '20세~29세' &
+                            korean_food$setle_cascnt >= 10000 &
+                            korean_food$setle_cascnt <= 150000, 'stdr_ym']))
+```
+
+## 연습 5
+
+```{r}
+# install.packages('devtools')
+# library(devtools)
+# devtools::install_github('JaseZiv/worldfootballR', ref = 'main')
+library(worldfootballR)
+
+match_summary <- fb_match_summary(match_url = "https://fbref.com/en/matches/74aed880/Ajax-Napoli-October-4-2022-Champions-League")
+match_summary[match_summary$Home_Away == 'Away' &
+                match_summary$Event_Type == 'Goal', 'Event_Players']
+```
+
+## 연습 6
+
+```{r}
+shooting <- fb_match_shooting(
+  "https://fbref.com/en/matches/2f44d120/Eintracht-Frankfurt-Totterham-Hotspur-October-4-2022-Champions-League"
+)
+shooting[shooting$Shooting_Player == 'Son Heung-min' |
+           shooting$Shooting_Player == 'Harry Kane',]
+```
+
+## 연습 7
+
+```{r}
+man_city_url <- "https://fbref.com/en/squads/b8fd03ef/Manchester-City-Stats"
+man_city_logs <- fb_team_match_log_stats(team_urls = man_city_url, stat_type =
+  "passing")
+man_city_logs[man_city_logs$Result == 'W' &
+                man_city_logs$PPA > 10,]
+```
+
+## 도전문제
+
+아래 문제는 "업종 카드소비 트렌드.csv"를 활용합니다.
+
+월 별 판매액 총계를 구하고 당월 판매액이 큰 순으로 기준년월을 5 개 나타내시오.
+월 별 판매액 총계의 평균, 분산, 표준편차를 구하시오.
+
+```{r}
+data.levels <- levels(factor(data$stdr_ym)) # 년월로 팩터를 만든 다음, 레벨을 불러온다
+data.sum_by_month_list <- integer(length(data.levels)) # 월 별 합계를 저장하기 위한 integer 벡터를 data.levels길이로 만큼 만듦.
+names(data.sum_by_month_list) <- data.levels # levels로 data.sum_by... 의 이름을 지정
+for (levelName in data.levels) {
+  # level 이름을 for 문으로 반복
+  # data.sum_by...의 하나의 요소에 이전에 지정했던 이름인 level이름으로 접근한다.
+  data.sum_by_month_list[levelName] <- sum(data$setle_amount[data$stdr_ym == levelName])
+  # data$setle_amount 열을 년월로 추출하여 더한다.
+}
+head(names(data.sum_by_month_list)[order(data.sum_by_month_list)], 5) # data.sum_by...로 정렬하여 상위 5개 데이터를 출력한다.
+mean(data.sum_by_month_list) # 평균
+var(data.sum_by_month_list) # 분산
+sd(data.sum_by_month_list) # 표준편차
+```

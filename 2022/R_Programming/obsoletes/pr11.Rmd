@@ -1,0 +1,710 @@
+---
+title: "PR11 - ggplot"
+author: "강현승"
+date: "2022-11-15"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# 1. ggplot2 기초
+
+### `ggplot2` plot의 기본 성분
+
+| 성분                       | 설명                                                                                                                 |
+|----------------------------|----------------------------------------------------------------------------------------------------------------------|
+| Data                       | 주로 dataframe 형태의 데이터                                                                                         |
+| Aesthetic Mappings         | 데이터를 축, 색상 및 점의 크기 등으로 매핑하는 방법                                                                  |
+| Geometric object           | 점,선,도형과 같은 기하학적 객체                                                                                      |
+| Facetting                  | 조건부 플롯을 위해 패널을 분할하여 표현하는 방법                                                                     |
+| Statistical transformation | 구간화, 분위수, 평활 등의 통계 변환                                                                                  |
+| Scales                     | 데이터의 스케일을 동적으로 조정하여 어떤 시각적 요소를 사용할 것인가 정의(e.g., 남성 = 파랑, 여성= 빨강 등으로 지정) |
+| Coordinate system          | 좌표계                                                                                                               |
+| Position adjustment        | 위치의 조정                                                                                                          |
+
+### `ggplot2` 함수 분류
+
+| 함수                 | 설명                                                                 |
+|----------------------|----------------------------------------------------------------------|
+| plot creation        | ggplot 객체를 생성하는 함수군                                        |
+| geoms                | 그래픽의 지오메트릭(기하학적인 형태)을 지정하고 추가하는 함수군      |
+| statistics           | 데이터를 통계적인 관점으로 변환하는 함수군                           |
+| scales               | 축의 스케일 변환과 라벨, 범례 등을 변경하는 함수군                   |
+| coordinate systems   | 좌표계를 설정하는 함수군                                             |
+| faceting             | 그래픽 facet 레이아웃을 정의하는 함수군                              |
+| position adjustments | 지오메트릭의 위치를 지정하는 함수군                                  |
+| anotation            | 주석을 표기하는 함수군                                               |
+| fortify              | 타 클래스 객체를 데이터 프레임 객체로 변환하는 함수군                |
+| themes               | 스타일이나 테마를 설정하는 함수군                                    |
+| aesthetics           | 데이터를 축, 라벨, 색상 등 기하 구조상 시각적 속성에 매핑하는 함수군 |
+| others               | 기타 함수군                                                          |
+
+### ggplot 레이어와 함수간 매핑
+
+| 레이어   | 함수                                    |
+|----------|-----------------------------------------|
+| data     | plot creation 함수군                    |
+| mapping  | plot creation 함수군, aesthetics 함수군 |
+| geom     | geoms 함수군                            |
+| stat     | statistics 함수군                       |
+| position | position adjustments 함수군             |
+
+-   기초 플롯인 ggplot 클래스 객체를 생성
+-   가장 많이 사용하는 함수는 `ggplot()`과 `qplot()`
+    -   ggplot() 함수는 dataframe 객체로 플롯을 그릴 때 사용
+    -   qplot() 함수는 각 변수가 독립적인 객체로 존재할 때 사용
+-   `qplot()` 함수는 geom을 지정하지 않을 경우 point로 적용됨
+-   ggplot은 모든 그래픽 인수들을 구체적으로 지정해야 함
+
+### Geoms 함수군
+
+-   geometric 요소를 지정하기 위한 함수군
+-   선, 점, 막대, 박스, 파이 등을 생각하면 됨
+
+| 함수                | 설명                                          | 비고                                                                                                     |
+|---------------------|-----------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `geom_point()`      | 산점도                                        |                                                                                                          |
+| `geom abline()`     | 추세선                                        | 기울기와 절편을 꼭 적어줘야 함                                                                           |
+| `geom_bar()`        | 막대그래프                                    | 이산형 변수화 해야 함                                                                                    |
+| `geom_ribbon()`     | 영역을 채우는 plot                            | `geom_area()`은 geom_ribbon의 한 형태                                                                    |
+| `geom boxplot()`    | 박스플롯                                      |                                                                                                          |
+| `geom _histogram()` | 히스토그램                                    |                                                                                                          |
+| `geom_density()`    | 1차원 데이터에 대한 밀도를 표현하기 위한 함수 | geom_area() + `stat_density()`와 동일                                                                    |
+| `geom _density2d()` | 2차원 데이터에 대한 밀도를 표현하는 함수      | `geom_area()+stat_density2d()`와 동일. 하지만 복잡한 표현을 하려면 `stat_density2d()`를 직접 사용해야 함 |
+| `geom_contour()`    | 등고선을 그리는 용도                          |                                                                                                          |
+| `geom_text()`       | plot에 text를 표현하기 위한 함수              |                                                                                                          |
+| `geom_map()`        | 지도를 표현하는 함수                          |                                                                                                          |
+
+## 1.1. ggplot2 기본 사용법
+
+-   `ggplot` 객체의 구조 - `summary`를 보면 대략적인 그래프를 짐작할 수
+    있음 - `mapping`을 보면 x,y축의 데이터와 색상을 결정짓는 변수를 확인
+    가능함 - `faceting`은 조건부 출력을 의미함. facet_null()' 은
+    faceting이 없다는 말 - `geom_point()`는 산점도 그래프라는 의미 -
+    `stat_identity`는 통계변환이 identity, 즉 변환이 없는 상태의
+    데이터라는 것을 의미 - `position_identity`도 데이터 위치가 어떠한
+    조정도 없었다는 것을 의미 - `na.rm=False`는 결측값 제거를 하지
+    않았다는 것을 의미함
+
+### 패키지 설치 및 데이터 준비
+
+```{r}
+# install.packages("ggplot2")
+# install.packages("titanic")
+library(titanic)
+titanic.df = titanic_train
+titanic.df$Survived = as.factor(titanic.df$Survived)
+titanic.df$Pclass = as.factor(titanic.df$Pclass)
+titanic.df$Sex = as.factor(titanic.df$Sex)
+titanic.df$Embarked = as.factor(titanic.df$Embarked)
+titanic.df$NumRelatives = titanic.df$SibSp + titanic.df$Parch
+library(ggplot2)
+```
+
+## 1.2. ggplot2로 barplot그리기
+
+-   실린더 수에 대한 barplot을 그림
+-   막대는 기어의 개수에 따라 서로 다른 facet에 출력
+-   facet이란 독립된 subplot이 그려지는 패널 구조를 의미
+-   결과 값을 보면 3개의 subplot이 있는 것을 확인 할 수 잇음
+-   산점도 색상 옵션으로 `colour =` 인수 사용, `barplot =`은 색상
+    옵션으로 `fill =` 인수 사용
+
+```{r}
+#Survival rates
+ggplot(data = titanic.df, aes(x = Survived)) + geom_bar()
+
+# Survival rate by gender
+ggplot(data = titanic.df, aes(x = Sex, fill = Survived)) + geom_bar()
+
+# Proportions of survival rate by gender
+ggplot(data = titanic.df, aes(x = Sex, fill = Survived)) + geom_bar(position = "fill")
+
+# to Survival rate by Passenger class
+ggplot(data = titanic.df, aes(x = Pclass, fill = Survived)) + geom_bar()
+
+# Proportions of survival rate by passenger
+ggplot(data = titanic.df, aes(x = Pclass, fill = Survived)) + geom_bar(position = "fill")
+
+# Proportions of Passenger class by survival
+ggplot(data = titanic.df, aes(x = Survived, fill = Pclass)) + geom_bar(position = "fill")
+
+# Survival rate by gender, but split barplot by Passenger class
+ggplot(data = titanic.df, aes(x = Sex, fill = Survived)) +
+  geom_bar(position = "fill") +
+  facet_wrap( ~ Pclass)
+
+# <span id="used-example" />
+# Survival rate by gender, but split barplot by Passenger class, bars next to each other
+ggplot(data = titanic.df, aes(x = Sex, fill = Survived)) +
+  geom_bar(position = "dodge") +
+  facet_wrap( ~ Pclass)
+```
+
+## 1.3. Histograms, boxplots, density plots
+
+```{r}
+# Age Distribution
+ggplot(data = titanic.df, aes(x = Age)) + geom_histogram(binwidth = 5)
+
+# Age Distribution by survival
+ggplot(data = titanic.df, aes(x = Age, fill = Survived)) + geom_histogram(binwidth = 5)
+
+# Age distribution by survival using boxplots
+ggplot(data = titanic.df, aes(x = Survived, y = Age)) + geom_boxplot()
+
+# Age distribution by survival and gender using boxplots
+ggplot(data = titanic.df, aes(X = Survived, y = Age, fill = Sex)) + geom_boxplot()
+
+# Age Distributions by survival, gender and passenger class using transparent density plots
+ggplot(data = titanic.df, aes(x = Age, fill = Survived)) +
+  facet_grid(Sex ~ Pclass) +
+  geom_density(alpha = 0.5)
+
+# Age distribution by survival, gender and passenger class using violin plots
+ggplot(data = titanic.df, aes(x = Sex, y = Age, fill = Survived)) +
+  facet_grid( ~ Pclass) +
+  geom_violin()
+```
+
+### 1.4. Scatter plots 산점도
+
+```{r}
+# Age VS fare
+ggplot(data = titanic.df, aes(x = Age, y = Fare)) + geom_point()
+
+# Age VS fare, color by survival
+ggplot(data = titanic.df, aes(x = Age, y = Fare, color = Survived)) + geom_point()
+
+# Age VS fare, color by survival, shape by Pclass
+ggplot(data = titanic.df, aes(
+  x = Age,
+  y = Fare,
+  color = Survived,
+  shape =
+    Pclass
+)) +
+  geom_point(alpha = 0.5)
+
+# Age VS fare, color by survival, shape by Pclass, size by number of relatives
+ggplot(data = titanic.df,
+       aes(
+         x = Age,
+         y = Fare,
+         color = Survived,
+         shape =
+           Pclass,
+         size = NumRelatives
+       )) +
+  geom_point()
+
+# Age VS fare, color by survival, shape by Pclass, size by number of relatives, semi-transparent points
+ggplot(data = titanic.df,
+       aes(
+         x = Age,
+         y = Fare,
+         color = Survived,
+         shape =
+           Pclass,
+         size = NumRelatives
+       )) +
+  geom_point(alpha = 0.5) +
+  scale_size_continuous(breaks = c(0, 2, 4, 6, 10)) +
+  scale_color_manual(values = c("red", "yellow"))
+
+# Age VS number of relatives, color by survival, semi-transparent points
+library(devtools)
+# devtools::install_github("hrbrmstr/ggalt")
+library(ggalt)
+ggplot(data = titanic.df,
+       aes(x = Age, y = NumRelatives, color = Survived)) +
+  geom_point(alpha = 0.5, size = 3) +
+  geom_encircle(data = subset(titanic.df,
+                              Age < 25 & NumRelatives > 4 & Survived == 0),
+                aes (x = Age, y = NumRelatives))
+
+# Age VS fare, color by survival, smoothed estimator
+ggplot(data = titanic.df, aes(x = Age, y = Fare, color = Survived)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+### 1.5. Line Plots
+
+```{r}
+# connect people by Cabin numbers
+ggplot(data = subset(titanic.df, Cabin != ""),
+       aes(x = Age, y = Name, color = Survived)) +
+  geom_point () +
+  geom_line(aes(group = Cabin))
+```
+
+### 1.6. Fine tuning
+
+```{r}
+# Scales (color, fill, size, shape, linetype)
+ggplot(data = titanic.df, aes(
+  x = Age,
+  y = Fare,
+  color = Survived,
+  size = NumRelatives
+)) +
+  geom_point(alpha = 0.5) +
+  scale_size_continuous(breaks = c(0, 5, 10),
+                        name = "Number of\nrelatives") +
+  scale_color_manual(labels = c("False", "True"),
+                     values = c("red", "yellow"))
+ggplot(data = titanic.df, aes(
+  x = Age,
+  y = Fare,
+  color = Survived,
+  size = NumRelatives
+)) +
+  geom_point(alpha = 0.5) +
+  scale_y_continuous(trans = "log2") +
+  labs(y = "Fare [$]")
+ggplot(data = titanic.df, aes(
+  x = Age,
+  y = Fare,
+  color = Survived,
+  size = NumRelatives
+)) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Age vs. Fare")
+```
+
+### 1.7. Coordinates
+
+-   ggplot은 Layer를 쌓아가는 방식으로 사용
+    -   $ggplot = layers + scales + coordinate \ system$
+    -   $layers = data + mapping + geom + stat + position$
+-   **scales** 와 **coordinate system**은 그림을 그릴 캔버스의 개념
+-   **layers**가 실제 그리는 그림
+-   **data**, **mapping**, **ceom** 등등으로 하나씩 중첩해 가면서 plot을
+    그림
+-   geom의 요소 또한 중첩 가능
+
+```{r}
+# Flip
+ggplot(data = titanic.df, aes(x = Pclass, fill = Survived)) +
+  geom_bar() +
+  coord_flip()
+
+# Pie Chart
+ggplot(data = titanic.df, aes(x = factor(1), fill = Survived)) +
+  geom_bar(position = "fill") +
+  facet_grid(Pclass ~ Sex) +
+  coord_polar(theta = "y")
+
+# Themes
+ggplot(data = titanic.df, aes(
+  x = Age,
+  y = Fare,
+  color = Survived,
+  size = NumRelatives
+)) +
+  geom_point(alpha = 0.5) +
+  theme_minimal() 
+```
+
+### 1.8. smoothers
+
+```{r}
+ggplot(data = titanic.df, aes(
+  x = Age,
+  y = Fare,
+  color = factor(Pclass)
+)) +
+  geom_point () +
+  geom_smooth(method = "lm")
+```
+
+# 2. leaflet
+
+-   leaflet 패키지는 interactive한 그래프를 그릴 있는 패키지
+-   구글맵과 오픈스트리트 맵을 이용하여 공간데이터를 시각화 함
+
+```{r}
+# install.packages('leaflet')
+library(leaflet)
+library(dplyr)
+
+m = leaflet() %>% addTiles()
+m %>% setView(127.0462, 37.2830, zoom = 15) #아주대 위경도 설정
+m %>% addPopups(127.0462, 37.2830, 'Here is Ajou University!')
+m
+```
+
+## leaflet예제
+
+-   `addTiles()` 함수와 `addAwesomeMarkers()` 함수 사용
+-   서울시 교통 돌발상황 조회 서비스 데이터 중 일부를 사용하여 지도에
+    표시하기
+
+### 데이터로드 및 시각화
+
+```{r}
+traffic = read.csv("traffic.csv", fileEncoding = "utf-8")
+range (traffic$start.ps.x) # 돌발상황 시작점 경도
+range(traffic$start.pos.y) # 돌발상황 시작점 위도
+traffic1 = traffic[traffic$start.pos.x != 0 &
+                     traffic$start.pos.y != 0, ] #na값 제거(0인값)
+leaflet(traffic1) %>% addTiles() %>%
+  addAwesomeMarkers( ~ start.pos.x, ~ start.pos.y)
+```
+
+# 연습문제
+
+## 연습문제1
+
+-   해당 코드는 반응형 시각화 도구인 plotly에 대한 예시 입니다. 위의
+    따라 쳤던 코드 중 하나를 선택해 plotly를 통해 나타내세요.
+-   참고 사이트 : <https://plotly.com/r/>
+
+```{r}
+# plotly 예제 코드
+
+library(plotly)
+t = ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  geom_point(size = 3)
+ggplotly(t)
+```
+
+```{r}
+myplot = ggplot(data = titanic.df, aes(x = Sex, fill = Survived)) +
+  geom_bar(position = "dodge") +
+  facet_wrap( ~ Pclass)
+ggplotly(myplot)
+```
+
+## 연습문제2
+
+-   다음은 spotifyr이라고 하는 패키지를 이용하여 데이터를 가져오는
+    방법이다.
+-   해당 데이터셋을 활용하여 2가지 이상의 그래프를 그리고 각각의 해석을
+    적으시오.
+-   다양한 가수 혹은 함수를 시도해보시오. (추가점 있음)
+-   참고 블로그
+    <http://catnip-clarinet-e71.notion.site/spotifyR-ecead90c55e74e77a19f6c3cbd744de6>
+
+```{r}
+library(devtools)
+# devtools::install_github('charlie86/spotifyr')
+library(spotifyr)
+Sys.setenv(SPOTIFY_CLIENT_ID = '19adc17a0e6747a4b668b274788c9600')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '83379751536f4d5aa2f8f71d28b58d30')
+access_token = get_spotify_access_token()
+bts = get_artist_audio_features('BTS')
+str(head(bts))
+```
+
+1.
+
+아래 도표는 BTS가 출시한 곡들을 스포티파이의 API에 질의하여 얻은 데이터를 바탕으로 어떤 음계가 몇 회 사용되었는지를 나타냅니다. 이를 통해 가장 빈번히 사용된 음계는 `C#`이며, 가장 드물게 사용된 음계는 `D#`임을 알 수 있습니다. 이 도표를 사용하여 아래와 같은 대화를 나눌 수 있습니다.
+
+Q)  BTS가 가장 빈번하게 사용한 음계는 무엇입니까?
+
+    A. BTS가 가장 빈번히 사용한 음계는 `C#`으로, 81 개의 곡에서 사용되었습니다.
+
+```{r}
+library(dplyr)
+bts$key_name = as.factor(bts$key_name)
+table(bts$key_name)
+ggplot(data = bts, aes(x = as.factor(key_name))) + geom_bar()
+```
+
+2.
+
+아래 도표는 윤하(1988)가 출시한 곡들을 스포티파이의 API에 질의하여 얻은 데이터를 바탕으로 energy 값을 x축으로, valence 값을 y축으로 하여 생성하였습니다. 점들의 위치를 살펴보면 energy와 valence는 양의 상관계수를 가지고 있음을 알 수 있습니다. 이 도표를 사용하여 아래와 같은 대화를 나눌 수 있습니다.
+
+Q)  윤하의 곡들에 있어 energy 값과 valence 값은 관계가 있습니까?
+
+    A. 윤하의 곡들에 있어 energy 값과 valence 값은 상관게수가 `.5975147`로써 양의 상관관계를 가집니다.
+
+이 도표에서 높은 valence는 긍정적 감정을 전달함을 의미합니다.
+
+> Valence: A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).
+
+이 도표에서 높은 energy는 빠르고 시끄럽다는 것을 의미합니다.
+
+> Energy: Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy.
+
+인자에 대한 설명의 출처: <https://rpubs.com/mary18/860196>
+
+```{r}
+younha = get_artist_audio_features('Younha')
+younha$key_name = as.factor(younha$key_name)
+# colnames(younha)
+with(younha, cor(energy, valence))
+ggplot(data = younha, aes(x = energy, y = valence)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = 'lm', aes(color = "lm"))
+```
+
+3.
+
+조금 더 대량의 데이터를 분석해보기 위해 1960년부터 2015년까지의 빌보드 TOP100에 탑재된 데이터를 가져옵니다.
+아래 도표는 탑재된 곡들을 스포티파이의 API에 질의하여 얻은 데이터를 바탕으로 danceability 값을 x축으로, valence 값을 y축으로 하여 생성하였습니다.
+
+`cor_df`를 활용하여 danceability_valence 간에 양의 상관관계를 발견할 수 있습니다.
+`cor_df`에서 얻은 danceability_valence 간의 상관계수가 양의 값을 가지고 있음에 따라 눈으로 어떤 분포를 보이는지 확인하기 위해 두 변수를 사용하여 산점도를 출력합니다.
+점들의 위치를 살펴보면 danceability_valence는 양의 상관계수를 가지고 있음을 알 수 있습니다. 
+
+energy_loudness 간의 상관관계는 스포티파이에서 이미 보통 energy 값이 높을수록 loud하다고 밝혔으므로 제외하였습니다.
+
+빌보드 TOP100 플레이리스트 출처: <https://github.com/mikkelkrogsholm/billboard/blob/master/data/spotify_playlists.rda>
+
+이 도표에서 높은 danceability는 템포, 리듬 안정성, 비트 강도, 전반적인 규칙성을 포함한 음악적 요소의 조합에 기초하여 트랙이 춤을 추기 적합함을 의미합니다.
+
+> Danceability: Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity.
+
+인자에 대한 설명의 출처: <https://rpubs.com/mary18/860196>
+
+```{r}
+billboard_spotify_playlists = read.csv('https://raw.githubusercontent.com/khskeb0513/ajou-r-programming/main/spotify_playlists.csv')
+billboard_track_ids_list = list()
+for (playlist_id in billboard_spotify_playlists$spotify_playlist) {
+  billboard_track_ids_list[[length(billboard_track_ids_list) + 1]] = get_playlist_tracks(playlist_id)$track.id
+}
+billboard_tracks_features = tibble()
+for (track_ids in billboard_track_ids_list) {
+  billboard_tracks_features = rbind(billboard_tracks_features,
+                                get_track_audio_features(track_ids))
+}
+combine_df = data.frame(combn(
+  c(
+    "danceability",
+    "energy",
+    "key" ,
+    "loudness",
+    "speechiness",
+    "acousticness",
+    "instrumentalness",
+    "liveness",
+    "valence",
+    "tempo",
+    "duration_ms"
+  ),
+  2
+))
+cor_df = data.frame()
+for (combination in combine_df) {
+  cor_df = rbind(cor_df, data.frame(
+    combination = paste0(combination[1], '_', combination[2]),
+    cor = cor(
+      billboard_tracks_features[[combination[1]]],
+      billboard_tracks_features[[combination[2]]],
+      use = 'na.or.complete'
+    )
+  ))
+}
+cor_df = cor_df %>% arrange(cor, )
+tail(cor_df)
+ggplot(data = billboard_tracks_features, aes(x = danceability, y = valence)) +
+  geom_point(alpha = 1 / 20) +
+  geom_smooth(method = 'lm', aes(color = "lm"))
+```
+
+
+# 도전문제
+
+-   해당 웹페이지의 코드들을 직접 실행해보며, EDA를 학습해주세요.
+-   사이트 주소:
+    <https://r4ds.had.co.nz/exploratory-clata-analysis.html>
+
+## 변량
+
+```{r}
+library(tidyverse)
+
+# 변수(variable)는 측정할 수 있는 양, 질 또는 속성이다.
+
+# 값(value)은 변수가 측정될 때의 상태이다. 변수의 값은 측정에 따라 변할 수 있다.
+
+# 관측값(observation)(또는 사례(case))은 유사한 조건에서 측정된 값들의 집합이다 (일반적으로 동시에 같은 대상에 대해 모든 관측된 값을 사용한다.). 관측값은 서로 다른 변수가 조합된 다양한 값을 포함한다. 관측값을 데이터 포인트라고 부르기도 한다.
+
+# 테이블 형식의 데이터(Tabular data)는 각 변수들과 관측값의 조합인 값들의 집합이다. 테이블 형식의 데이터는 각 값은 ‘셀’에, 변수들은 열에, 관측값은 행에 있을 때 타이디(tidy)하다고 한다. 지금까지 보았던 모든 데이터는 타이디 데이터였다. 실제로 데이터 대부분은 타이디하지 않기 때문에 tidy data에서는 이 부분에 대해 다시 다룰 것이다.
+
+# 범주형 변수의 분포를 확인하기 위해 막대 그래프를 사용
+ggplot(data = diamonds) + geom_bar(mapping = aes(x = cut))
+
+# 수동으로 계산
+diamonds %>%  count(cut)
+
+# 연속형 변수의 분포를 확인하기 위해 막대 히스토그램을 사용
+ggplot(data = diamonds) + geom_histogram(mapping = aes(x = carat), binwidth = 0.5)
+
+# 연속형 변수를 0.5 단위로 범주화하여 수동으로 계싼
+diamonds %>% count(cut_width(carat, 0.5))
+
+# 3캐럿 미만의 다이아몬드로 범위를 줄이고 binwidth를 다르게 하여 막대 히스토그램 생성
+smaller <- diamonds %>% 
+  filter(carat < 3)
+ggplot(data = smaller, mapping = aes(x = carat)) +
+  geom_histogram(binwidth = 0.1)
+
+# 하나의 플롯에서 여러 개의 히스토그램을 보기 위해 선 히스토그램 생성
+ggplot(data = smaller, mapping = aes(x = carat, colour = cut)) +
+  geom_freqpoly(binwidth = 0.1)
+
+# 3 캐럿보다 큰 다이아몬드는 없다
+ggplot(data = smaller, mapping = aes(x = carat)) +
+  geom_histogram(binwidth = 0.01)
+
+# 272 번의 화산분출은 크게 2 개의 그룹으로 묶을 수 있다
+ggplot(data = faithful, mapping = aes(x = eruptions)) + 
+  geom_histogram(binwidth = 0.25)
+
+# 0.5 단위로 나누었을 때 개수가 50 개 이하인 범주를 확인
+ggplot(diamonds) + 
+  geom_histogram(mapping = aes(x = y), binwidth = 0.5) +
+  coord_cartesian(ylim = c(0, 50))
+
+# 다이아몬드는 y축 값이 3mm 미만, 20mm 초과인 경우 이상치라고 볼 수 있다
+diamonds %>% 
+  filter(y < 3 | y > 20) %>% 
+  select(price, x, y, z) %>%
+  arrange(y)
+
+# 이상값이 결과에 최소한의 영향을 미치고 왜 이상값이 발생했는지 그 이유를 알 수 없다면 결측값으로 대체한 후 계속 진행하는 것이 합리적이다. 그러나 이상값이 결과에 상당한 영향을 미치는 경우, 타당한 이유 없이 제외해서는 안 된다. 문제의 원인(예, 데이터 입력 오류)을 파악하고 이상값을 제거한 사실을 밝혀야 한다.
+```
+
+## 결측값 
+
+```{r}
+# 이상 값이 포함된 행 전체 삭제
+diamonds2 <- diamonds %>% filter(between(y, 3, 20))
+
+# 이상 값을 결측값으로 변경
+diamonds2 <- diamonds %>% mutate(y = ifelse(y < 3 | y > 20, NA, y))
+
+# ggplot2은 결측치가 포함된 데이터가 인입되었을 시 경고를 표시한다. 이를 제거하려면 na.rm 인자를 TRUE로 설정
+ggplot(data = diamonds2, mapping = aes(x = x, y = y)) + 
+  geom_point()
+
+# 결측값은 결측값이 아닌 행과 차이를 만들고 싶어 설정하는 경우도 있다.
+# nycflights13::flights 에서 dep_time 변수의 결측값은 항공기의 운항이 취소되었다는 것을 나타낸다.
+# dep_time는 출발 시각을 의미
+
+# dep_time을 15분 단위로 쪼개어서 운항 / 결항으로 나누어 그 갯수를 표시한 모습. 결항의 전체 갯수가 적어 가시적으로 비교가 어렵다.
+
+# install.packages('nycflights13')
+library(nycflights13)
+
+nycflights13::flights %>%
+  mutate(
+    cancelled = is.na(dep_time),
+    sched_hour = sched_dep_time %/% 100,
+    sched_min = sched_dep_time %% 100,
+    sched_dep_time = sched_hour + sched_min / 60
+  ) %>%
+  ggplot(mapping = aes(sched_dep_time)) +
+  geom_freqpoly(mapping = aes(colour = cancelled), binwidth = 1 / 4)
+```
+
+## 공변동
+
+```{r}
+# 전체적인 빈도 수가 다르다
+ggplot(diamonds) + 
+  geom_bar(mapping = aes(x = cut))
+
+# 전체적인 빈도 수가 크게 달라 다이아몬드의 가격과 품질 간 관계를 파악하기 어렵다
+ggplot(data = diamonds, mapping = aes(x = price)) + 
+  geom_freqpoly(mapping = aes(colour = cut), binwidth = 500)
+
+# 품질 별 상대도수 히스토그램을 통해 품질 별 가격대 분포를 확인할 수 있다
+ggplot(data = diamonds, mapping = aes(x = price, y = after_stat(density))) + 
+  geom_freqpoly(mapping = aes(colour = cut), binwidth = 500)
+
+# 박스플롯을 그려 같은 기능을 수행할 수 있다
+ggplot(data = diamonds, mapping = aes(x = cut, y = price)) +
+  geom_boxplot()
+
+# 번주형 변수들의 공변동은 관측 값 수를 세서 시각화할 수 있다. 관측 값 수는 원의 크기로 표시하고 있다
+ggplot(data = diamonds) +
+  geom_count(mapping = aes(x = cut, y = color))
+
+# 혹은 수동으로 갯수를 세서 시각화할 수 있다
+diamonds %>% 
+  count(color, cut) %>%  
+  ggplot(mapping = aes(x = color, y = cut)) +
+    geom_tile(mapping = aes(fill = n))
+
+# 데이터셋이 큰 산점도의 경우 alpha 인자를 통해 투명도의 추가를 고려할 수 있다
+# 투명도 설정 전
+ggplot(data = diamonds) +
+  geom_point(mapping = aes(x = carat, y = price))
+# 투명도 설정 후
+ggplot(data = diamonds) + 
+  geom_point(mapping = aes(x = carat, y = price), alpha = 1 / 100)
+
+# hexbin 패키지는 좌표 평면을 2D bin 으로 나눈 뒤, 값을 색상의 진하기로 표시한다
+# 직사각형 빈을 만드는 경우
+ggplot(data = smaller) +
+  geom_bin2d(mapping = aes(x = carat, y = price))
+# 육각형 빈을 만드는 경우
+# install.packages("hexbin")
+ggplot(data = smaller) +
+  geom_hex(mapping = aes(x = carat, y = price))
+
+# 연속형 변수를 그룹화하여 범주형 변수로 만드는 방법도 있다. 이를 박스 플롯으로 그릴 수 있다
+
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) + 
+  geom_boxplot(mapping = aes(group = cut_width(carat, 0.1)))
+
+# 캐럿을 20 부분으로 범주화하여 표시
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) + 
+  geom_boxplot(mapping = aes(group = cut_number(carat, 20)))
+```
+
+## 패턴과 모델
+
+```{r}
+# Old Faithful 분출 시간과 분출 사이의 시간 사이의 산점도
+# 분출 사이의 대기 시간이 길수록 분출 시간도 길어지는 패턴을 보인다.
+
+ggplot(data = faithful) + 
+  geom_point(mapping = aes(x = eruptions, y = waiting))
+
+# 예를 들어 다이아몬드 데이터를 생각해보자. 컷팅과 캐럿 그리고 캐럿과 가격은 밀접하게 관련되어 있으므로 컷팅과 가격의 상관관계를 이해하기 어렵다. 모델을 활용하여 가격과 캐럿 간의 매우 강력한 상관관계를 제거하면 남아있는 중요한 세부 요소들을 탐색할 수 있다. 다음 코드에서는 carat 으로 price 를 예측하는 모델을 적합시킨 다음, 잔차(예측값과 실제값의 차이)를 계산한다. 캐럿의 효과가 제거되면 잔차는 다이아몬드의 가격에 대한 관점을 제공한다.
+
+# 윌킨슨 표기법을 사용하여 모델식을 지정합니다. log(carat)를 예측 변수로 사용하여 log(price)에 대한 선형 회귀 모델을 피팅합니다. fitlm하고 기능이 같은 듯...
+# 다이아몬드의 price의 로그 값을 반응변수(종속변수), carat의 로그 값을 독립변수(설명변수)로 하여 단순회귀모형(linear model) 계산
+mod <- diamonds %>% lm(formula = log(price) ~ log(carat))
+str(mod)
+# mod 모형에서 잔차 값을 가져와 자연로그의 밑으로 취해 resid 열의 값으로 설정
+diamonds2 <- diamonds %>% 
+  modelr::add_residuals(mod) %>%
+  mutate(resid = exp(resid))
+# 그래프 생성
+ggplot(data = diamonds2) + 
+  geom_point(mapping = aes(x = carat, y = resid))
+
+# 커팅과 가격의 상관관계(다이아몬드의 크기에 비례하여 우수한 품질의 다이아몬드가 더 비싸다)
+
+ggplot(data = diamonds2) + 
+  geom_boxplot(mapping = aes(x = cut, y = resid))
+```
+
+## ggplot2 호출
+
+```{r}
+ggplot(data = faithful, mapping = aes(x = eruptions)) + 
+  geom_freqpoly(binwidth = 0.25)
+
+# 일반적으로 함수의 첫 번째, 두 번째 인수는 매우 중요하므로 기억해두어야 한다. ggplot() 에서 처음 두 개의 인수는 data 와 mapping 인수이며, aes() 의 처음 두 개의 인수는 x 와 y 이다. 이 책의 나머지 부분에서는 이 이름들을 쓰지 않을 것 이다. 이렇게 하면 타이핑이 줄어들고 상용구의 양이 줄어들어 플롯 간에 다른 점을 쉽게 알 수 있다. 이는 27 에서 다루게 될 매우 중요한 프로그래밍 문제 이다.
+
+# 위의 플롯을 좀 더 간결하게 작성하면 다음과 같다.
+
+ggplot(faithful, aes(eruptions)) + 
+  geom_freqpoly(binwidth = 0.25)
+
+# 때때로 데이터를 변환하는 파이프라인의 끝을 플롯으로 전환할 것이다. %>% 에서 + 로 전환되는 것을 유의하자. 이 전환이 필요하지 않으면 좋겠지만 안타깝게도 파이프가 생기기 이전에 ggplot2 가 만들어졌다.
+
+diamonds %>% 
+  count(cut, clarity) %>% 
+  ggplot(aes(clarity, cut, fill = n)) + 
+    geom_tile()
+```

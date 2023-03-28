@@ -1,0 +1,29 @@
+---
+title: "pres_park_gandam"
+author: "강현승"
+date: "2022-11-10"
+output: html_document
+---
+
+```{r}
+library(wordcloud2)
+library(RcppMeCab)
+library(tidytext)
+library(dplyr)
+library(stopwords)
+library(readr)
+library(stringr)
+
+pres_park_txt = read_file('박근혜간담회록.txt')
+pres_park_pos = tibble(text = pres_park_txt) %>%
+  unnest_tokens(word, text, token = posParallel) %>%
+  filter(str_detect(word, '/nnp|/nng'))
+
+pres_park_pos$word = sapply(str_split(pres_park_pos$word, '/'), "[[", 1)
+
+pres_park_pos = pres_park_pos %>%
+  anti_join(tibble(word = stopwords('ko', 'marimo'))) %>% # 패키지 활용 불용어 삭제
+  count(word, sort = T)
+
+pres_park_pos %>% wordcloud2()
+```

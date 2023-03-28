@@ -1,0 +1,87 @@
+---
+title: "Untitled"
+author: "강현승"
+date: "2022-12-08"
+output: html_document
+---
+
+```{r}
+if (nrow(reports1) == sum(file.exists(paste0('reports/', reports1$rcept_no, '.zip')))) {
+  print('all files downloaded')
+} else {
+  dir.create('reports/')
+  i = 0
+  for (report_no in reports1$rcept_no) {
+    i = 1 + i
+    print(paste(i, report_no))
+    if (file.exists(paste0('reports/', report_no, '.zip'))) {
+      next
+    }
+    download.file(
+      url = paste0(
+        'http://opendart.fss.or.kr/api/document.xml?crtfc_key=',
+        crtfc_key,
+        '&rcept_no=',
+        report_no
+      ),
+      destfile = paste0('reports/', report_no, '.zip'),
+      quiet = T
+    )
+  }
+}
+```
+
+```{r}
+zip_file_dirs = paste0('reports/', reports1$rcept_no, '.zip')
+zip_file_exdirs = paste0('extracted_reports/', reports1$rcept_no, '/')
+zip_files = data.frame(
+  zip_file_dir = zip_file_dirs,
+  zip_file_exdir = zip_file_exdirs,
+  report_no = reports1$rcept_no
+)
+
+if (length(zip_file_exdirs) == sum(dir.exists(zip_file_exdirs))) {
+  print('all files extracted')
+} else {
+  i = 0
+  by(zip_files, 1:nrow(zip_files), function(row) {
+    i = 1 + i
+    print(paste(i, row$zip_file_exdir))
+    unzip(row$zip_file_dir, exdir = row$zip_file_exdir)
+  }) == list()
+}
+
+reports2 = reports1
+by(zip_files, 1:nrow(zip_files), function(row) {
+  if (length(list.files(row$zip_file_exdir)) == 0) {
+    print(paste(row$zip_file_exdir, ': not found in site'))
+    reports2 <<- reports2 %>% filter(rcept_no != row$report_no)
+  }
+}) == list()
+```
+
+```{r}
+exdirs = paste0('./extracted_reports/',
+                reports2$rcept_no,
+                '/')
+main_reports = data.frame()
+for (exdir in exdirs) {
+  main_reports = rbind(main_reports, data.frame(
+    exdir = exdir,
+    report_xml = paste0(exdir, list.files(exdir))[file.size(paste0(exdir, list.files(exdir))) == max(file.size(paste0(exdir, list.files(exdir))))]
+  ))
+}
+main_reports = main_reports[, c('exdir', 'report_xml')]
+main_reports$rcept_no = ''
+by(main_reports, 1:nrow(main_reports), function(row) {
+  main_reports[main_reports$exdir == row$exdir, 'rcept_no'] <<- strsplit(row$exdir, '/')[[1]][3]
+}) == list()
+
+reports3 = bind_cols(reports2, main_reports)
+reports3 = reports3 %>%
+  select(corp_code, corp_name, stock_code, corp_cls, report_nm, flr_nm, report_xml) %>%
+  mutate(report_no = reports2$rcept_no)
+
+str = xml_text(read_xml(reports3$report_xml[1], encoding = 'UTF-8'))
+
+```

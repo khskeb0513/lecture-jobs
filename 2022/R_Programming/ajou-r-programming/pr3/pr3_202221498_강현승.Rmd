@@ -1,0 +1,311 @@
+---
+title: "PR3 - Vector"
+author: "강현승"
+date: "2022-09-22"
+output: html_document
+---
+
+# 1. R에서 기초적인 4가지 Data Type
+
+## 1.1. Numeric : 숫자 데이터 인식. 정수, 실수 등
+
+```{r}
+num = 3
+class(num)
+numVec = c(1, 2, 3)
+class(numVec)
+```
+
+## 1.2. Complex : 복소수 a+bi
+```{r}
+comp = 2 + 3i
+class(comp)
+compVec = c(2 + 3i, 4 + 5i, 6 + 7i)
+class(compVec)
+```
+
+## 1.3. Character : 글자와 문장 데이터 인식. 특수기호포함
+
+```{r}
+char1 = "a"
+class(char1)
+char2 = "character"
+class(char2)
+char3 = "3"
+class(char3)
+char4 = "year:2020"
+class(char4)
+```
+
+## 1.4. Logical : 참,거짓(TrueorFalse)의 논리판단
+
+```{r}
+# 논리형 데이터(LogicalData)는 참/거짓의 두 가지만 존재함
+logic1 = TRUE
+class(logic1)
+logic2 = T
+class(logic2)
+logic3 = FALSE
+class(logic3)
+logic4 = F
+class(logic4)
+
+logic5 = 4 > 5
+logic5
+class(logic5)
+logic6 = 7 > 2
+logic6
+class(logic6)
+```
+
+## 1.5. Special Value
+
+```{r}
+NA
+# NA : 결측값, 데이터가 없는 경우
+NaN
+# NaN : 불가능한 값(e.g., 10/0)
+(-Inf) * 3
+# +/- Inf : +/-로 무한대 값
+```
+
+## 1.6. numeric data와 complex data의 연산
+
+```{r}
+comp + num
+comp - num
+comp * num
+comp / num
+
+comp * 1i
+
+log(comp)
+sqrt(comp)
+```
+
+# 2.Vector
+
+## 2.1.vector간의연산
+
+```{r}
+vec1 = c(2, 4, 1, 3, 4, 5, 1, 2, 3, 5)
+vec2 = c(4, 5, 2, 3, 8, 3, 4, 1, 5, 2)
+
+vec1 + vec2
+vec1 - vec2
+vec1 * vec2
+vec1 / vec2
+vec1 > vec2
+vec1 >= vec2
+12 + vec1
+12 / vec1
+```
+
+## 2.2. character vector
+
+```{r}
+# 문자 및 문장으로 이루어진 데이터 종류 (특수문자포함)
+# Vector에 문자와 숫자가 함께 입력되면 숫자도 문자로 취급
+# ""(쌍따옴표)로 데이터 입력
+
+char_vec1 = c("a", "b", "c")
+class(char_vec1)
+char_vec2 = c("year", 2020)
+class(char_vec2)
+```
+
+##2.3.logicalvector
+
+```{r}
+logic_vec1 = (1:9 > 5)
+logic_vec1
+class(logic_vec1)
+logic_vec2 = c(T, F, F, T, F, T, F, T, F)
+logic_vec2
+class(logic_vec2)
+
+# logical data의 연산
+# T or TRUE는 1로 계산
+# F or FASLE는 0으로 계산
+T + T
+TRUE * FALSE
+sum(T, T, F, T, F)
+```
+
+## 2.4. vector의 생성: 수열
+
+```{r}
+# 1부터 9까지 1간격으로 증가하며 수열 생성
+1:9
+
+# 1부터 9까지 1간격으로 증가하며 수열 생성
+seq(from = 1, to = 9, by = 1)
+
+# 1부터 9까지 3간격으로 증가하며 수열 생성
+seq(from = 1, to = 9, by = 3)
+
+# 1부터 9까지 3간격으로 증가하며 수열 생성
+seq(1, 9, 3)
+
+# 1부터 9까지 3등분하는 수열 생성
+seq(1, 9, length.out = 3)
+```
+
+## 2.5. vector의 생성: 원소 반복
+
+```{r}
+rep(c(1, 2, 3), each = 4) # c(1,2,3)을 각각 4번 반복하기
+rep(c(1, 2, 3), time = 4) # c(1,2,3)을 4회 반복하기
+rep(c(1, 2, 3), each = 4, time = 4) # c(1,2,3)을 각각 4번씩 4회 반복하기
+```
+
+## 2.6. 벡터에 저장된 값 추출 및 수정
+
+```{r}
+a = 1:9
+a
+a[1] # a의 첫 번째 데이터
+a[1:4] # a의 첫 번째부터 네 번째까지 순차적으로 데이터 불러오기
+a[c(1, 2, 5)] # a의 1,2,5 번째 데이터 불러오기
+a[c(-2:-4)] # a의 2 번째부터 4 번째까지 데이터를 제외한 나머지
+a[a > mean(a)] # a에서 a의 평균보다 큰 데이터만 불러오기
+a[a = mean(a)] # a에서 a의 평균과 같은 데이터만 불러오기
+a[a < mean(a)] = 1
+a # a에서 평균보다 작은 값 바꾸기
+append(a, 10) # a에 10을 추가
+append(a, 10, 2) # a에 10을 추가하되 두 번째 자리 뒤에 추가
+sort(a, decreasing = T) # a를 내림차순으로 정렬
+sort(a, decreasing = F) # a를 오름차순으로 정렬
+a[order(a, decreasing = T)] # a를 내림차순으로 정렬(벡터의 첨자를 정렬)
+a[order(a, decreasing = F)] # a를 오름차순으로 정렬(벡터의 첨자를 정렬)
+```
+
+## 2.7. 통계함수
+
+```{r}
+a # 변수
+mean(a) # 평균
+var(a) # 분산
+sd(a) #표준편차
+summary(a) # 통계적요약
+```
+
+## 2.8. 기타 벡터 다루기
+
+```{r}
+object.size(a)
+length(a) # a의 길이 세기
+nchar("alphago") # 문자의 길이 세기
+length("alphago")
+letters[1:5] # 문자열 만들기
+names(a) = c("c1", "c2", "c3", "c4", "c5", "c6")
+a # 원소에 이름 붙이기, 이름 안 붙은 원소는 <NA> 처리
+```
+
+# PR3 연습문제 
+
+## 문제 1
+
+```{r}
+# 공지사항 url prefix
+url = 'https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&articlelimit=10&article.offset='
+# url prefix에 0~90 내에서 10 단위의 벡터 붙이기
+portal = paste0(url, seq(0, 90, 10))
+portal
+```
+
+## 문제 2 ~ 문제 7
+
+```{r}
+# Q 2~7 공통사항
+tigers_bat = c('김선빈', '박찬호', '소크라테스', '최형우', '류지혁', '김태진')
+avg = c(0.292, 0.272, 0.324, 0.259, 0.268, 0.289)
+AB = c(469, 452, 466, 428, 370, 380)
+b1 = c(114, 100, 120, 99, 80, 72)
+b2 = c(21, 22, 27, 2, 17, 10)
+b3 = c(0, 0, 7, 1, 2, 1)
+HR = c(3, 4, 16, 12, 2, 1)
+```
+
+### 문제 2
+
+```{r}
+# append 나성범 data
+tigers_bat = append(tigers_bat, '나성범')
+avg = append(avg, 0.320)
+AB = append(AB, 512)
+b1 = append(b1, 121)
+b2 = append(b2, 37)
+b3 = append(b3, 2)
+HR = append(HR, 21)
+```
+
+### 문제 3
+
+```{r}
+# remove 나지완 data
+nah_index = !(tigers_bat == '나지완')
+tigers_bat = tigers_bat[nah_index]
+avg = avg[nah_index]
+AB = AB[nah_index]
+b1 = b1[nah_index]
+b2 = b2[nah_index]
+b3 = b3[nah_index]
+HR = HR[nah_index]
+```
+
+### 문제 4
+
+```{r}
+# remove 김태진 data
+kim_index = tigers_bat != '김태진'
+tigers_bat = tigers_bat[kim_index]
+avg = avg[kim_index]
+AB = AB[kim_index]
+b1 = b1[kim_index]
+b2 = b2[kim_index]
+b3 = b3[kim_index]
+HR = HR[kim_index]
+
+# append 박동원 data
+tigers_bat = append(tigers_bat, '박동원')
+avg = append(avg, 0.233)
+AB = append(AB, 348)
+b1 = append(b1, 90)
+b2 = append(b2, 20)
+b3 = append(b3, 0)
+HR = append(HR, 16)
+
+# print data
+tigers_bat
+avg
+AB
+b1
+b2
+b3
+HR
+```
+
+### 문제 5
+
+```{r}
+# avg 값이 avg의 평균보다 높은 선수들의 이름 출력
+tigers_bat[avg > mean(avg)]
+```
+
+### 문제 6
+
+```{r}
+# HR값이 제일 낮은 선수의 이름을 출력
+tigers_bat[HR == min(HR)]
+# HR값이 제일 높음 선수의 이름을 출력
+tigers_bat[HR == max(HR)]
+```
+
+### 문제 7
+
+```{r}
+SLG = (b1 + 2 * b2 + 3 * b3 + 4 * HR) / AB
+names(SLG) = tigers_bat
+SLG
+```

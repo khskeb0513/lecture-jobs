@@ -1,0 +1,325 @@
+---
+title: "PR8 - Apply, Aggregate"
+author: "강현승"
+date: "2022-10-30"
+output: html_document
+---
+
+# 1. apply
+
+- 복수의 데이터에 함수를 일괄 적용할 때 사용함
+- apply, lapply, sapply, vapply, tapply, mapply 등이 있음
+- 각 apply 함수는 입력받는 데이터의 형태와 출력하는 데이터의 형태에 따라 다르게 적용함
+
+## 1.1. `apply` 함수
+
+- 형식 : apply(data,margin(1또는2),function)
+- margin 인수를 1 또는 2로 사용하며 1은 행, 2는 열을 적용
+- 행이나 열의 합계, 평균 등을 일괄적으로 구할 수 있음
+
+```{r}
+head(mtcars, 1)
+apply(mtcars[1:3,], 1, FUN = mean) # 1 ~ 3행의 평균
+apply(mtcars[, 1:3], 2, FUN = mean) # 1 ~ 3열의 평균
+```
+
+## 1.2. `lapply`(list apply)
+
+- 형식 : lapply(data, funtion)
+- 리스트 형의 데이터를 받아 리스트로 결과를 반환
+- 데이터 프레임의 각 열은 리스트로 구성되어 있음
+
+```{r}
+lapply(mtcars[, 1:3], mean)
+```
+
+## 1.3. `sapply`(simple apply)
+
+- 형식 : function(data, function, simplify = F)
+- 입력값 : 벡터, 리스트, 데이터 프레임 가능
+- 출력값 : 벡터, 리스트, 매트릭스 형태로 결과를 반환
+- 인수 simplify = F이면 리스트로 결과 반환
+
+```{r}
+x = 1:5
+y = 11:14
+z = list(x, y)
+sapply(x, function(x) {
+  x + 1
+}) # 벡터입력, 벡터출력
+sapply(z, function(x) {
+  x + 1
+}) # 리스트입력, 리스트출력
+sapply(mtcars[1:3, ], function(x) {
+  x + 1
+}) # 데이터프레임 입력, 매트릭스 출력
+sapply(mtcars[1:3, ], function(x) {
+  x + 1
+}, simplify = F) # 데이터 프레임 입력, 리스트 출력
+```
+
+## 1.4. `tapply`(table apply)
+
+- 그룹으로 묶은 후 함수를 적용, 적용 값을 벡터나 행렬로 반환
+
+```{r}
+patient = read.table("sample_data.txt", header = TRUE)
+factor(patient$type)
+tapply(patient$type, patient$type, length) # type에 따른 그룹 별 환자의 수
+tapply(patient$age, patient$type, mean) # type에 따른 그룹 별 나이의 평균
+```
+
+## 1.5. `mapply`(multi simple apply)
+
+- 여러 개의 리스트에 함수를 적용
+
+```{r}
+m1 = list(a = c(1:10), b = c(11:20))
+m2 = list(c = c(21:30), d = c(31:40))
+mapply(sum, m1$a, m2$d) # 2 개의 리스트에 적용
+mapply(sum, m1$a, m1$b, m2$c, m2$d) # 4 개의 리스트에 적용
+```
+
+# 2. aggregating
+
+- 예제데이터
+
+```{r}
+seg.df = read.csv(
+  "https://docs.google.com/uc?id=1x5d5CY5Sz0jCrpTL0BJgobrEBD46JPFc&export=download"
+)
+head(seg.df)
+```
+
+## 2.1. `mean`, `sd` 통계 함수
+
+```{r}
+attach(seg.df)
+mean(income[Segment == "Moving up"]) # Movingup 세그먼트 집단의 소득 평균
+mean(income[Segment == "Moving up" &
+              subscribe == "subNo"]) # Movingup 세그먼트 + 서비스 미사용자의 소득 평균
+```
+
+## 2.2. `apply` 함수
+
+```{r}
+apply(seg.df[, c(1, 3, 4)], 2, mean) # 나이, 수입, 자녀 수 평균
+str(apply(seg.df[, c(1, 3, 4)], 2, mean))
+# Movingup 세그먼트 + 서비스 미사용자의 소득평균
+apply(seg.df[Segment == "Moving up", c(1, 3, 4)], 2, mean)
+```
+
+## 2.3. `table` 함수
+
+```{r}
+table(kids) # 자녀 수 현황
+table(ownHome, subscribe) # 이용자 기준, 주거 형태 현황
+table(Segment, kids, subscribe) # 세그먼트, 구독 여부, 자녀 수
+```
+
+## 2.4. `by` 함수
+
+- 사용 방식 : by(목표변수, 기준변수, 함수)
+- by 함수는 결과 값을 리스트로 반환한다.
+
+```{r}
+by(income, Segment , mean)
+by(income, list(Segment, subscribe), mean)
+```
+
+## 2.5. `aggregate` 함수
+
+- 사용방식 : aggregate(목표변수, 기준변수, 함수)
+- 결과 값을 데이터프레임으로 출력해주는 것이 가장 큰 장점임.
+- 기준변수가 list로 입력되어야 한다.
+
+```{r}
+aggregate(income, list(Segment), mean)
+str(aggregate(income, list(Segment), mean))
+```
+
+- 포뮬러를 사용하면 효과적이다(변수명 지정, 리스트 변환)
+
+```{r}
+aggregate(income ~ Segment, data = seg.df, mean)
+aggregate(income ~ Segment + ownHome + subscribe, data = seg.df, mean)
+```
+
+## 2.6. `cut` 함수
+
+- cut 함수는 연속형 변수를 특정 구간으로 구분하여 명목형 변수로 변환한다.
+- cut(데이터, breaks = 구간수, labels = 구간 이름)
+
+```{r}
+cut.data = aggregate(income ~ Segment + ownHome + subscribe, data = seg.df, mean)
+cut.data$income2 = cut(cut.data$income, breaks = seq(0, 70000, 10000))
+cut.data$income2 = cut(
+  cut.data$income,
+  breaks = c(0, 20000, 30000, 40000, 50000, 60000, 70000),
+  labels = c('2만이하', '2만-3만', '3만-4만', '4만-5만', '5만-6만', '6만이상')
+)
+cut.data
+```
+
+## 2.7. `grep` 함수
+
+```{r}
+grep("ap", c("apple", "Apple", "apple2", "bbapple")) # ap를 포함하는 원소들의 위치
+grep("ap", c("apple", "Apple", "apple2", "bbapple"), value = TRUE) # ap를 포함하는 원소
+grep("[1-3]",
+     c("apple1", "apple2", "apple3", "apple4", "Apple1")) # 1, 2, 3을 포함하는 원소 위치
+grepl("ap", c("apple", "Apple", "apple2", "bbapple")) # ap를 포함하는 원소들의 위치
+```
+
+- 공통된 패턴을 가진 자료들의 위치를 찾아서 위치 값을 활용해 데이터를 일괄 변환할 때 사용한다.
+
+```{r}
+seg.df$ownHome = as.character(seg.df$ownHome)
+grep('Yes', seg.df$ownHome)
+head(seg.df)
+seg.df$ownHome[grep('Yes', seg.df$ownHome)] = 'Yes'
+head(seg.df)
+```
+
+## 2.8. `gsub` 함수
+
+- 현재 데이터의 Segment 컬럼에 한 칸 띄워쓰기를 없애고 싶을 때, 다음과 같이 사용한다.
+
+```{r}
+seg.df$Segment = gsub(" ", "", seg.df$Segment)
+head(seg.df)
+```
+
+# PR8 연습문제
+
+## PR8 연습문제 1 번
+
+```{r}
+data_clickstream <-
+  read.csv(
+    'https://ajouackr-my.sharepoint.com/:x:/g/personal/sehyoung66_ajou_ac_kr/EVU9rdRGBN5DpiLkyYzqte8Boxyafvr9USquqVy4lv7Fbg?e=GCTSlv&download=1'
+  )
+# head(data_clickstream)
+
+appliedValues = lapply(data_clickstream[, c('order', 'price')], function(nums) {
+  return((nums - min(nums)) / (max(nums) - min(nums)))
+})
+data_clickstream$normed_order = appliedValues$order
+data_clickstream$normed_price = appliedValues$price
+
+head(data_clickstream)
+```
+
+## PR8 연습문제 2 번
+
+```{r}
+data_by_artist <-
+  read.csv(
+    "https://ajouackr-my.sharepoint.com/:x:/g/personal/sehyoung66_ajou_ac_kr/ETc8rGQFYutIi9fCkVbPAVkB9NavPEObup73YWdo6aDPQA?e=ghYi9y&download=1"
+  )
+
+artist_devid = data_by_artist[grep('David', data_by_artist$artists),]
+head(artist_devid)
+```
+
+## PR8 연습문제 3 번
+
+```{r}
+boxplot(data_by_artist$count)
+count_label = cut(
+  data_by_artist$count,
+  breaks = c(0, 100, 200, 300, 400, Inf),
+  labels = c('100이하', '100에서200', '200에서300', '300에서400', '400이상')
+)
+str(count_label)
+```
+
+## PR8 연습문제 4 번
+
+```{r}
+energy_mean_by_count = aggregate(data_by_artist$energy ~ count_label, data = data_by_artist, mean)
+names(energy_mean_by_count) = c('count', 'energy_mean')
+energy_mean_by_count
+```
+
+## PR8 도전문제
+
+아래 코드를 통해 data_by_artist 자료의 popularity의 사분위수를 기준으로 자료를 4개의 구간으로 나누고, 각 구간에 해당하는 열의 energy 평균을 구하고자 한다.
+
+```{r}
+# 박스플롯으로 data_by_artist의 popularity 열의 분포를 확인
+boxplot(data_by_artist$popularity)
+# data_by_artist의 popularity 열의 4분위수 확인
+popularity_quantile = quantile(data_by_artist$popularity)
+popularity_quantile
+# data_by_artist$popularity 열의 데이터를 ~ 12, 12 ~ 39, 39 ~ 51, 51 ~ 총 4개 구간을 나누고, popularity_label 이라는 변수로 추가
+popularity_label = cut(
+  data_by_artist$popularity,
+  breaks = c(popularity_quantile),
+  labels = c('12이하', '12에서39', '39에서51', '51이상')
+)
+# 위의 popularity_label를 사용하여 popularity_label 별로 energy의 평균을 계산
+energy_mean_by_popularity = aggregate(data_by_artist$energy ~ popularity_label, data_by_artist, mean)
+energy_mean_by_popularity
+```
+
+<hr>
+
+아래 코드를 통해 data_by_artist 자료의 tempo의 사분위수를 기준으로 자료를 4개의 구간으로 나누고, 각 구간에 해당하는 열의 popularity 평균을 구하고자 한다.
+
+```{r}
+# 박스플롯으로 data_by_artist의 tempo 열의 분포를 확인
+boxplot(data_by_artist$tempo)
+# data_by_artist의 tempo 열의 4분위수 확인
+tempo_quantile = quantile(data_by_artist$tempo)
+tempo_quantile
+# data_by_artist$tempo 열의 데이터를 ~ 99.3665, 99.3665 ~ 115.3574, 115.3574 ~ 129.8488, 129.8488 ~ 총 4개 구간을 나누고, tempo_label이라는 변수로 추가
+tempo_label = cut(
+  data_by_artist$tempo,
+  breaks = c(tempo_quantile),
+  labels = c(
+    '99.3665이하',
+    '99.3665이하115.3574이상',
+    '115.3574이하129.8488이상',
+    '129.8488이상'
+  )
+)
+# 위의 tempo_label를 사용하여 tempo_label 별로 popularity의 평균을 계산
+popularity_mean_by_tempo = aggregate(data_by_artist$popularity ~ tempo_label, data_by_artist, mean)
+popularity_mean_by_tempo
+```
+
+<hr>
+
+위에서 계산한 tempo_quantile을 사용하여 이상치에 해당하는 tempo 열 데이터를 가진 행을 제거하여 tempo_label 별로 popularity의 평균을 계산하고자 한다.
+
+```{r}
+# 이 문단에서의 이상치: ~ Q1 + 1.5 * IQR, Q3 + 1.5 * IQR ~
+iqr_range = list(
+  min = tempo_quantile[2] - 1.5 * (tempo_quantile[4] - tempo_quantile[2]),
+  max = tempo_quantile[4] + 1.5 * (tempo_quantile[4] - tempo_quantile[2])
+)
+iqr_range
+# data_by_artist$tempo 열의 데이터를 53.64312 ~ 99.3665, 99.3665 ~ 115.3574, 115.3574 ~ 129.8488, 129.8488 ~ 175.5721 총 4개 구간을 나누고, rm_tempo_label이라는 변수로 추가
+rm_tempo_label = cut(
+  data_by_artist$tempo,
+  breaks = c(
+    iqr_range$min,
+    tempo_quantile[2],
+    tempo_quantile[3],
+    tempo_quantile[4],
+    iqr_range$max
+  ),
+  labels = c(
+    '53.64312이상99.3665이하',
+    '99.3665이하115.3574이상',
+    '115.3574이하129.8488이상',
+    '129.8488이상175.5721이하'
+  )
+)
+# 위의 rm_tempo_label를 사용하여 rm_tempo_label 별로 popularity의 평균을 계산
+popularity_mean_by_rm_tempo = aggregate(data_by_artist$popularity ~ rm_tempo_label,
+                                        data_by_artist,
+                                        mean)
+popularity_mean_by_rm_tempo
+```

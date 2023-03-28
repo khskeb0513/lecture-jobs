@@ -1,0 +1,184 @@
+---
+title: "PR2"
+author: "강현승"
+date: "2022-09-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# 1. R로 계산하기
+
+## 1.1 기본연산
+
+```{r}
+31 + 3
+15 - 3 + 7
+13 * 2 - 6 / 2
+13 * (2 - 6) / 2
+
+8 %/% 2
+11 %% 3
+
+n = 21 %% 4
+print(n)
+```
+
+## 1.2 수학함수 사용
+
+```{r}
+log(2)
+log(exp(2))
+sqrt(4)
+4 ^ 5
+4 ** 5
+round(9.13)
+ceiling(1.41)
+floor(1.95)
+pi
+
+```
+
+# 2. 수치 요약하기
+
+## 2.1 벡터 생성 및 출력
+
+-   정수형 값이 저장된 벡터를 생성하기
+-   벡터 출력해보기
+
+```{r}
+v1 = 3
+v2 = c(4, 5)
+v3 = 3:11
+v4 = c(v1, v2, v3)
+print(v1)
+print(v2)
+print(v3)
+print(v4)
+
+v1 * 2
+v1 / v3
+```
+
+## 2.2 평균구하기
+
+-   평균을 구하는 여러가지 방법
+
+```{r}
+(1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9)/9
+sum(1,2,3,4,5,6,7,8,9)/9
+v5 = 1:9
+sum(v5) / length(v5)
+mean(v5)
+```
+
+## 2.3 함수활용
+
+```{r}
+mean(v5)
+var(v5)
+sd(v5)
+median(v5)
+max(v5)
+min(v5)
+v6 = 1:10
+median(v6)
+```
+
+# 3. 문자값이 저장된 벡터 생성
+
+```{r}
+myEmail = "h5k@ajou.ac.kr"
+birthday = c("2002년", "5월", "13일")
+birthday2 = paste("2002년", "5월", "13일")
+birthday3 = paste0("2002년", "5월", "13일")
+
+print(myEmail)
+print(birthday)
+print(birthday2)
+print(birthday3)
+```
+
+# 4. 기타 R 활용법
+
+## 4.1 세미콜론 활용 및 변수명만으로 출력하기
+
+```{r}
+mean(v5)
+sd(v5);plot(v5)
+myEmail
+birthday
+```
+
+## 4.2 작업폴더 확인 및 변경
+
+- 변경할 폴더는 사전에 만들어져 있는 폴더여야함
+- 본인이 작업할 폴더의 경로를 setwd("") 의 따옴표 사이에 입력
+- 작업할 폴더는 본인이 원하는 경로로 지정해주세요.
+- 예) setwd("c:/data")
+
+```{r}
+getwd()
+setwd("/Users/hyeonseungkang/RProjects")
+getwd()
+```
+
+# PR2 연습문제
+
+## 문제 1
+
+```{r}
+# q1
+
+student_num = c(11, 15, 3, 8, 6, 6, 8, 13)
+x.scaled = (student_num - min(student_num)) / (max(student_num) - min(student_num))
+x.scaled
+```
+
+## 문제 2
+
+```{r}
+# q2
+
+NIR = 60
+RED = 26
+NDVI = (NIR - RED) / (NIR + RED)
+NDVI
+```
+
+## 문제 3
+
+```{r}
+# q3
+
+n = 12
+
+undirected = n * (n - 1) / 2
+directed = n * (n - 1)
+
+print(undirected)
+print(directed)
+```
+
+## 문제 4
+
+```{r}
+# q4
+
+n = 12
+undirected = n * (n - 1) / 2
+link = 20
+density = link / undirected
+print(density)
+```
+
+## 도전문제
+
+```{r}
+# dojeon
+
+n = 12
+undirected = n * (n - 1) / 2
+all_networks = 2 ^ undirected # 링크 각자가 끊어지기도 연결되기도 하니까 링크 당 경우의 수 "2"로 계산해서 2^(링크 수)
+all_networks # 출력
+```

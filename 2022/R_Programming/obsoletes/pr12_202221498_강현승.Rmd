@@ -1,0 +1,631 @@
+---
+title: "PR12 - Data Wrangling"
+author: "강현승"
+date: "2022-11-21"
+output: html_document
+---
+
+# 1. Data Wrangling with tidyverse
+
+Data Wrangling이란, 분석을 진행하기 위해 날것(raw)의 데이터를 분석에 적합한 형태로 정형화시키는 작업입니다.
+
+R에서는 tidyverse 라는 패키지 생태계를 구성하고 있어서, 일관성 있고 쉬운 작업을 가능하게 합니다.
+
+```{r}
+# install.packages("tidyverse")
+library(tidyverse)
+```
+
+# 2. `tidyr`
+
+tidyr 은 Hadley Wickham이 만든 데이터의 포맷을 변경하기 위한 패키지
+
+### `tidyr` 의 주요함수
+
+함수 설명
+
+- `gather()` 데이터를 wide에서 long 포맷으로 변경
+- `spread()` 데이터를 long에서 wide 포맷으로 변경
+- `separate()` 단일 열(column)을 복수 열들로 분리
+- `unite()` 복수 열(column)들을 단일 열로 결합
+
+### `tidyr` 실습 데이터: `cases` in `EDAWR`
+
+Dataset to support the Expert Data Analysis with R: `EDAWR`
+
+```{r}
+library(devtools)
+# devtools::install_github("rstudio/EDAWR", force = TRUE)
+library(EDAWR)
+head(cases)
+head(pollution)
+head(storms)
+```
+
+## 2.1. `gather()` 함수
+
+- wide 포맷의 데이터를 원하는 조건에 맞게 long 포맷으로 변환하는 함수
+- `gather ( 데이터 , 키(Key), 값(Value), ... )`
+  + `키(Key)` **새로운데이터**에 변수로 표시될 열이름
+  + `값(Value)` **새로운데이터**에 변수의 값이 표시 될 열이름
+  + `...` **원데이터**로 부터 모으기(gather)가 진행될 열들의 범위
+  
+```{r}
+gather(cases, Year, n, 2:4)
+```
+
+# 2.2. `spread()` 함수
+
+- long 포맷의 데이터를 원하는 조건에 맞게 long 포맷으로 변환하는 함수
+- `separate(데이터, 키(Key), 값(Value), ~)`
+  + `키(Key)` 복수개의 열로 spread될 기존 long 포맷의 열이름
+  + `값(Value)` 복수개의 열로 spread 되어 값이 될 기존 long 포맷의 열이름
+  
+```{r}
+spread(pollution, size, amount)
+```
+
+## 2.3. `separate()` 함수
+
+- 하나의 열을 특정 조건에 따라 여러개의 열로 나누어 주는 함수입니다.
+- separte(data, col, into, sep, ~)
+  + `col` 조건에 따른 분할을 진행할 열이름
+  + `into` 분할된 결과가 저장될 각 열들의 이름
+  + `sep` 분할 조건
+  
+```{r}
+storms2 = separate(storms, date, c("year" , "month" , "day"), sep = "-")
+storms2
+```
+
+# 2.4. `unite()` 함수
+
+- 여러개로 나누어진 열을 특정 조건에 따라 결합해주는 함수입니다.
+- `unite(data, col, , sep)`
+  + `col` 조건에 따라 결합된 결과가 저장될 열이름
+  + `...` 합쳐질 열이름들
+  + `sep` 결합시 구분자
+  
+```{r}
+unite(storms2, "date" , year, month, day, sep = "-")
+```
+
+# 3. `dplyr`
+- `dplyr`은 Hadley Wickham이 만든 데이터 핸들링을 위한 패키지
+- `dplyr`은 C++로 작성되어 기존 데이터핸들링 패키지보다 빠른 데이터조작이 가능
+- 각종 데이터베이스 지원(**MySQL**, **PostgreSQL**, **SQLite**, **BigQuery**)
+- R의 기본문법과 프로그래밍능력만으로도 데이터의 조작이 가능하지만, dplyr 패키지를 활용하면 통일된 문법양식으로 데이터조작이 가능함
+- 체인연산자을 지원함으로( %>%`) 앞부분의 연산결과를 뒤에 오는 함수의 입력값으로 사용할 수 있음
+
+### `dplyr` 의 주요함수
+
+| 함수 | 설명 | 기존 함수 | 
+| ---- | ---- | --------- |
+| `filter()` | 지정한 조건식에 맞는 데이터 추출 | `subset()` |
+| `arrange()` | 정렬 | `order()`, `sort()` |
+| `select()` | 열의 추출 | `data[, c("Year", , "Month")]` |
+| `mutate()` | 열 추가 | `transform()` |
+| `summarise()` | 집계 | `aggregate()` |
+
+### `dplyr` 실습데이터 `nycflights13`
+
+미국 휴스턴에서 출발하는 모든 비행기의 이착륙기록
+
+```{r}
+# install.packages("nycflights13") #해당 패키지에 데이터가 있음
+library(nycflights13)
+library(dplyr)
+head(flights)
+```
+
+# 3.1 `filter()` 함수
+
+- 데이터에서 원하는 조건에 따라 행을 추출하는 함수
+- filter(데이터, 조건1 : 조건2) : 조건1 또는 조건2 둘중 한가지를 충족하는 데이터 추출
+- filter(데이터, 조건1 & 조건2) : 조건1과 조건2 모두 충족하는 데이터 추출
+- 조건을 작성할때쉼표` `는 AND, `|`는 OR와 같음
+
+```{r}
+filter(flights, month == 1 | day == 1) #37198row
+filter(flights, month == 1, day == 1) #842row
+filter(flights,
+       month == 1,
+       day == 1,
+       year == 2013) #832row
+```
+
+## 3.2 `arrange()` 함수
+
+- 데이터를 원하는 조건에 따라 정렬해주는 함수
+- arrange(데이터, 정렬기준컬럼1, 정렬기준컬럼2, 정렬기준컬럼3)
+- 내림차순으로 정렬시 desc함수 사용 arrange(데이터, desc(정렬기준컬럼1))
+
+```{r}
+arrange(flights, year, month, day) #ArrDelay, Month, Year 순으로 정렬
+arrange(flights, desc(month)) #Month컬럼기준으로 내림차순으로 정렬
+```
+
+## 3.3 `select()` 함수
+
+- select함수는 원하는 열(column)을 추출
+- select(데이터, 컬럼1, 컬럼2, 컬럼3)
+- select(데이터, 컬럼1: 컬럼3)
+- 컬럼명을 변경할수 있음
+
+```{r}
+select(flights, year, month, day)
+select(flights, year:day)
+select(flights, -(year:day))
+```
+
+## 3.4 `distinct()` 함수
+
+- 중복항목을 제외한 데이터를 확인 할 수 있음(unique함수와 동일)
+- distinct(데이터, 컬럼명)
+
+```{r}
+distinct(select(flights, tailnum))
+distinct(select(flights, origin, dest))
+```
+
+## 3.5 `mutate()` 함수
+- 기존 데이터 프레임에 새로운 열을 추가해줌
+- 데이터프레임 내의 변수들을 활용해 새로운 변수를 만들때 효과적임
+- 새로 생성한 변수를 해당 함수내에서 바로 활용이 가능
+
+```{r}
+#arr_delay - dep_delay값으로 gain컬럼 추가
+mutate(flights, gain = arr_delay - dep_delay)
+#gain컬럼을 만드는 동시에 gain컬럼을 이용해 다른 변수를 생성가능
+mutate(flights,
+       gain = arr_delay - dep_delay,
+       gain_per_hour = gain / (air_time / 60))
+```
+
+## 3.6 `summarise()` 함수
+
+- mean(), sd(), var() , median()함수를 활용해 기술통계량을 확인
+- 결과를 데이터프레임으로 반환함
+
+```{r}
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+```
+
+## 3.7 `group_by()` 함수
+
+- 변수의 레벨에 따라 자료를 그룹화해줌
+- 그룹에 따른 수치자료를 산출하고 싶을때 편리함
+- summarize함수와 함께 사용시 aggregate함수와 같은 기능
+- ex)직급에 따른 평균 연봉과 사용가능한 연차일수(휴가)를 구하고 싶을 때
+
+```{r}
+#비행기별로 그룹만들기
+by_tailnum = group_by(flights, tailnum) #비행기별로 그룹만들기
+
+#비행기별 비행회수, 비행거리평균, 연착시간평균 산출
+delay = summarise(
+  by_tailnum,
+  count = n(),
+  dist = mean(distance, na.rm = TRUE),
+  delay = mean(arr_delay, na.rm = TRUE)
+)
+
+#회수가 20회이상 , 거리가 2000이하인 비행기만 추출
+delay = filter(delay, count > 20, dist < 2000)
+```
+
+- 위에서 만든 delay데이터로 시각화
+
+```{r}
+library(ggplot2)
+ggplot(delay, aes(dist, delay)) +
+  geom_point(aes(size = count), alpha = 1 / 2) +
+  geom_smooth() +
+  scale_size_area()
+```
+
+# 3.8. `join()` 함수
+
+- join(x, y) 또는 join(x, y, by="기준열") 형태
+- 조인의 기준이 되는 단일 컬럼이 존재하는 경우 별도 by인수를 지정하지 않아도됨
+- 단일 칼럼이 존재하지 않는 경우 by=c(기준열1 = 기준열2)와 같이 설정을 해주어야 함.
+- 조인의 기준이 되는 컬럼이 여러개이거나, 여러가지 컬럼을 동시에 활용해야하는 경우 by인수를 사용
+
+```{r}
+#join 실습 데이터 생성
+superheroes = "
+name, alignment, gender, publisher
+Magneto, bad, male, Marvel
+Storm, good, female, Marvel
+Mystique, bad, female, Marvel
+Batman, good, male, DC
+Joker, bad , male, DC
+Catwoman, bad, female, DC
+Hellboy, good, male, Dark Horse Comics
+"
+
+publishers = "
+publisher, yr_founded
+DC, 1934
+Marvel, 1939
+Image, 1992
+"
+superheroes = read_csv(superheroes, trim_ws = TRUE, skip = 1)
+publishers = read_csv(publishers, trim_ws = TRUE, skip = 1)
+```
+
+- inner_join, left_join, full_join, anti_join, semi_join 각각의 출력값확인하기
+
+```{r}
+inner_join(superheroes, publishers) #X, Y의 교집합
+left_join(superheroes, publishers) #X기준 (왼쪽)으로 머징
+full_join(superheroes, publishers) #X, Y의 합집합
+anti_join(superheroes, publishers) #X의 컬럼만 유지하여 머징
+semi_join(superheroes, publishers) #Y의 여집합
+```
+
+# 4. `magrittr`
+
+- magrittr 패키지는 연산자(operator)들의 집합들을 제공합니다.
+- 데이터 연산을 왼쪽에서 오른쪽 순서로 구조화,
+- nested 함수 호출을 피함,
+- 지역 변수 및 함수의 정의의 필요성을 최소화,
+- 연산 순서 내에서 어디서나 추가 step을 만들 수 있음
+- f(x)를 X %>% f()로 대체할 수 있음
+- 이 연산자가 main operator(chaining)인데 해당 기능이 의미 없이 보이시겠지만 여러가지 기능을 결합할 때 그 이점이 더욱 명확해집니다.
+- dplyr을 불러오면 자동으로 불러와지게 됩니다.
+
+## 4.1 main operator (Chaining; %>%`)
+
+- 여러단계의 함수나 연산을 연결하여 한번에 수행할 때 사용
+- 앞의 함수의 결과는 바로 뒤에오는 함수의 입력값이 됨
+- 데이터를 여러객체에 할당하지 않아도 되기때문에 메모리 관리에 유리함
+
+### 체인연산 사용하지 않을때
+
+```{r}
+a1 = group_by(flights, year, month, day)
+a2 = select(a1, year:day, arr_delay)
+a3 = summarise(a2, arr = mean(arr_delay, na.rm = TRUE))
+a4 = filter(a3, arr > 30)
+a4
+```
+
+### 체인연산 사용했을때
+
+```{r}
+flights %>%
+  group_by(year, month, day) %>%
+  select(arr_delay) %>%
+  summarise(arr = mean(arr_delay, na.rm = TRUE)) %>%
+  filter(arr > 30)
+```
+
+## 4.2. `.`의 역할
+
+- `.`의 역할에 대해서 알아봅시다.
+- 일반적으로 %>% 연산자만 사용하시게 되면 제일 첫 인수에 자동으로 배정이 됩니다.
+
+```{r}
+head(iris, 3)
+iris %>% head(3) # = head(., 3)
+```
+
+- 데이터를 넘겨줘야 할 인수의 위치가 첫번째가 아닐 경우 다음과 같은 에러를 확인할 수 있음
+- `gsub()`는 찾아 바꾸는 함수로써, 사용방법은 `gsub(찾을문자나 숫자, 바꿀 문자나 숫자, 데이터)`
+
+```{r,warning=T}
+a = c("bannananana", "an apple")
+gsub("n", "l", a)
+a %>% gsub("n", "l")
+```
+
+- 이러한 상황에서, `.`을 원하는 위치에 넣어주시면 해당 위치에 데이터가 넘어가게 됨
+- `!!`은 `magrittr`나 `dplyr`에만 속해 있는 것이 아니라 R의 base에 정해진 규칙으로 `.~cyl` 의 사용법과 같습니다.
+
+```{r}
+gsub("n", "l", a)
+a %>% gsub("n", "l", .)
+```
+
+## 4.3. Chaining 예제
+
+### 4.3.1. mtcars aggregate
+
+```{r}
+library(magrittr)
+car_data =
+  mtcars %>% #1
+  subset(hp > 100) %>% #2
+  aggregate(. ~ cyl, data = ., FUN = . %>% mean %>% round(2)) %>% #3
+  transform(kpl = mpg %>% multiply_by(0.4251)) %>% #4
+  print #5
+```
+
+- 예제 해석
+  + mtcars 데이터셋을(#1)
+  + hp를 기준으로 100보다 큰 데이터만 추출한 후(#2)
+  + cyl를 기준으로 각 변수들의 평균을 구한 다음에 소수점 둘째 자리까지 반올림을 한 후(#3)
+  + kpl(kilometer per liter) 열을 만들어 mpg*0.4251을 수행하고(#4)
+  + 만들어진 데이터를 출력(#5)과 동시에 car_data에 할당하는 과정입니다.
+
+- 체인연산없이 실행
+
+```{r}
+car_data =
+  transform(aggregate(
+    . ~ cyl,
+    data = subset(mtcars, hp > 100),
+    FUN = function(x)
+      round(mean(x), 2)
+  ),
+  kpl = mpg * 0.4251)
+car_data
+```
+
+### 4.3.2. 예제 변환
+
+- **2.1.** 예제
+
+tidyr의 함수들도 chaining 연산과 함께 사용하면 직관적으로 사용할 수 있습니다.
+
+```{r}
+cases %>% gather(Year, n, 2:4)
+```
+
+- **3.7.** 예제
+
+dplyr에서도 함께 쓰여 데이터를 그룹화하고 수치를 요약하는 등의 작업에 특화되어 있습니다.
+
+```{r}
+#비행기별 비행회수, 비행거리평균, 연착시간평균 산출
+flights %>%
+  group_by(tailnum) %>%
+  summarise(
+    count = n(),
+    dist = mean(distance, na.rm = TRUE),
+    delay = mean(arr_delay, na.rm = TRUE)
+  )
+```
+
+# 5. tibble
+
+- `tibble` 은 tidyverse 생태계에서 데이터 프레임을 대신하여 편리한 기능들 및 동작을 포함한 자료형입니다.
+  + factor 자동 변환
+  + 일부값만 출력
+  + 출력시 자료형 명시
+  
+- 데이터 프레임과 비교
+| 작업유형 | 데이터프레임 명령어 | 티블 명령어 |
+| -------- | ------------ | ------ | ----------- |
+| 생성 | `data.frame()`, `data_frame()` | `tibble()`, `tribble()`
+| 강제변환 (Coercion) | `as.data.frame()` | `as_tibble()`
+| 데이터 불러오기 | `read.*()` | `read_delim()`, `read_csv()`, `read_csv2()`, `read_tsv()` |
+
+## 5.1. `tibble` 생성
+
+### `tibble()`
+
+```{r}
+tibble(x = 1:5,
+       y = 1,
+       Z = x ^ 2 + y)
+```
+
+### `tribble()`
+
+코드 단계에서 데이터를 입력받도록 하기 위해 존재하는 함수입니다.
+
+```{r}
+tribble(~ x, ~ y, ~ z,
+        #--/----/----
+        "a", 2, 3.6,
+        "b", 1, 8.5)
+```
+
+### `as_tibble()`
+
+기존의 데이터 프레임을 tibble 형으로 전환 합니다.
+
+```{r}
+iris_tibble = as_tibble(iris) # 기존의 데이터 프레임을 tibble로
+print(class(iris)) # 기존 데이터 프레임 클래스
+print(class(iris_tibble)) # 새롭게 정의된 tibble 클래스 (데이터 프레임도)
+head(iris_tibble)
+```
+
+## 5.2. 데이터 불러오기
+
+- 데이터를 읽어올 때, dataframe이 아닌 tibble로 읽어오기 위해서, 동일한 `tidyverse` 생태계에 속한 `readr` 패키지의 함수들을 필요로 합니다.
+- 이미 `tidyverse` 를 library하였으므로 바로 이용 가능합니다.
+
+### `read_csv(file)`
+
+- 기존의 데이터 불러오기와 동일하게 파일명을 지정하여 해당 파일을 tibble로 읽어올 수 있습니다.
+
+```{r}
+read_csv("traffic.csv")
+```
+
+### `read_csv(csv_url)`
+
+- 외부에서 공개된 CSV 파일도 바로 읽어올 수 있습니다.
+  + github, gist, google drive
+  
+```{r}
+file_url = "https://gist.githubusercontent.com/theoroe3/8bc989b644adc24117bc66f50c292fc8/raw/f677a2ad811a9854c9d174178b0585a87569af60/tibbles_data.csv"
+read_csv(file_url)
+```
+
+### locale 설정
+
+- 한글이 포함된 데이터를 읽어올 때, `read.csv` 에서 `fileEncdoing` 으로 조정을 하였습니다.
+- read_csv 에서는 주로 `locale` 인자를 설정해 주어야 하는데, 통상적으로 `locale("ko",encoding="euc-kr")` 와 같이 설정해줍니다.
+
+예제는 아래의 연습문제에서 데이터를 불러오는 것으로 알아보겠습니다.
+
+### 5.3. 결측값 처리
+
+결측값을 처리하는 방법으로 결측값이 있는 행을 삭제하거나, 다른 값으로 치환하는 방법이 있습니다.
+
+- `drop_na()` 는 결측값이 있는 행을 삭제하는 함수입니다.
+- `fill()` 은 인접한 값들을 이용해서 결측값을 치환하는 방법입니다.
+- `replace_na()` 는 특정한 값을 이용해서 결측값을 치환하는 방법입니다.
+
+### `drop_na()`
+
+```{r}
+library(dplyr)
+df = tibble(x = c(1, 2, NA) , y = c("a", NA, "b"))
+df %>% drop_na()
+df %>% drop_na(x)
+vars = "y"
+df %>% drop_na(x, any_of(vars))
+```
+
+### `fill()`
+
+```{r}
+sales = tibble::tribble(
+  ~quarter, ~year, ~sales,
+  "Q1", 2000, 66013,
+  "Q2", NA, 69182,
+  "Q3", NA, 53175,
+  "Q4", NA, 21001,
+  "Q1", 2001, 46036,
+  "Q2", NA, 58842,
+  "Q3", NA, 44568,
+  "Q4", NA, 50197,
+  "Q1", 2002, 39113,
+  "Q2", NA, 41668,
+  "Q3", NA, 30144,
+  "Q4", NA, 52897,
+  "Q1", 2004, 32129,
+  "Q2", NA, 67686,
+  "Q3", NA, 31768,
+  "Q4", NA, 49094
+)
+sales %>% fill(year)
+```
+
+### `fill(.direction="up")`
+
+```{r}
+tidy_pets = tibble::tribble(
+  ~rank, ~pet_type, ~breed,
+  1L, NA, "Boston Terrier",
+  2L, NA, "Retrievers (Labrador)",
+  3L, NA, "Retrievers (Golden)",
+  4L, NA, "French Bulldogs",
+  5L, NA, "Bulldogs",
+  6L, "Dog", "Beagles",
+  1L, NA, "Persian",
+  2L, NA, "Maine Coon",
+  3L, NA, "Ragdoll",
+  4L, NA, "Exotic",
+  5L, NA, "Siamese",
+  6L, "Cat", "American Short"
+)
+tidy_pets %>%
+  fill(pet_type, .direction = "up")
+```
+
+### `replace_na()`
+
+```{r}
+df = tibble(x = c(1, 2, NA) , y = c("a", NA, "b"))
+df %>% replace_na(list(x = 0, y = "unknown"))
+df %>% dplyr::mutate(x = replace_na(x, 0))
+```
+
+
+# PR12 연습문제
+```{r}
+data1 = read.csv("data1.csv", fileEncoding = "EUC-KR")
+data2 = read.csv("data2.csv", fileEncoding = "EUC-KR")
+```
+
+### 문제 1
+
+- data1.csv에는 지역별 온실가스 배출량 정보가 있으며, data2.csv에는 지역 별 기업 수가 있다.
+- data1.csv는 data1이라는 변수에 저장하고 data2.csv는 data2이라는 변수에 저장하고, 두 변수를 `시도`를 기준으로 하나의 데이터프레임으로
+만드시오.
+
+- 조건1. wide 형태를 long으로 바꾸어야 함.
+- 조건2. join을 진행하여야 함.
+- 조건3. head(, 10)을 통해 상위 10개만 출력하시오.
+
+```{r}
+data2_long = gather(data2, 광역시도명, n, 2:18)
+fetched_data = inner_join(data1, data2_long)
+head(fetched_data, 10)
+```
+
+### 문제2.
+
+group_by, filter 함수를 사용하여 문제 1의 데이터를 필요에 따라 변형/집계/추출한 다음 시각화를 진행하시오.
+
+부산 시의 전체온실가스배출량의 연도 별 추이를, 또 연도 별 사업장 등록형태 별 비중도 보고 싶어요.
+
+```{r}
+entire_pusan_corporative = sum((data2_long %>% filter(광역시도명 == '부산광역시'))$n)
+co2_pusan_by_year = fetched_data %>%
+  filter(광역시도명 == '부산광역시') %>%
+  group_by(년도) %>%
+  select(전체온실가스배출량, 등록현황, n) %>%
+  mutate(
+    전체온실가스배출량 = n / entire_pusan_corporative * 전체온실가스배출량
+  )
+
+ggplot(co2_pusan_by_year, aes(fill = 등록현황, y = 전체온실가스배출량, x = 년도)) +
+  geom_bar(position = "stack", stat = "identity")
+```
+
+# PR12 도전문제
+
+### 제공되는 데이터를 이용하여 수업시간에 배운 함수들을 최대한 활용해 주세요.
+
+- 조건1. 최소 10줄 이상의 코드를 작성하세요.
+- 조건2. tidyr, dplyr, magrittr의 함수를 최소 1개 이상씩 사용하세요.
+- 조건3. 주석을 최대한 상세하게 추가해 주세요.
+
+1. 2020년 1월 한 달 동안 일 별 대출 금액 추이와 일 별 대출 금액 중 내방 고객 대 온라인 고객의 차지하는 비율을 시각적으로 확인하고 싶어요.
+
+```{r}
+# 경기도 지원 대출금 파일을 분석하기 위해 read.csv 함수를 사용하여 메모리에 저장
+supportive_g_money_raw = read.csv('G-money지원현황.csv', fileEncoding = 'euc-kr')
+# 구문을 간결하게 하기 위해 margrittr의 pipeline을 이용
+supportive_g_money_data = supportive_g_money_raw %>%
+  # supportive_g_money_raw의 신청일자 열을 년월일 각자의 열로 분리하는데, 하이픈을 기준으로 구분
+  # 열을 특정 기준으로 여러 열로 쪼개기 위해 tidyr::separate를 이용
+  separate(col = 신청일자, sep = '-', into = c('신청년', '신청월', '신청일')) %>%
+  # 신청년과 신청월을 필터링하기 위해 dplyr::filter 이용
+  filter(신청년 == '2020', 신청월 == '01')
+
+# 시각화를 위해 ggplot을 이용, 접수구분 열로 색 구분을, 대출금액의 합계를 y축, 신청일을 x축으로 하고자 함
+ggplot(supportive_g_money_data, aes(fill = 접수구분, y = 대출금액, x = 신청일)) +
+  # 갯수를 세는 게 아닌, 이미 값이 구해져 있기 때문에 stat 파라미터를 identity로 설정하여야
+  geom_bar(position = "stack", stat = "identity")
+```
+
+2. 금리가 4퍼센트가 넘는 지원대출의 신청년월에 따른 대출금액 추이를 보고 싶어요. 또 신청년월 별로 자금대분류 별 비중도 보고 싶어요.
+
+```{r}
+# supportive_g_money_raw를 pipeline을 통해 전달
+supportive_g_money_data_1 = supportive_g_money_raw %>%
+  # 금리가 4퍼센트 이상만 필터링
+  filter(대출금리 > 4) %>%
+  # 신청일자 열을 년월일 각자의 열로 분리하는데, 하이픈을 기준으로 구분
+  # 하나의 열을 특정 규칙으로 여러 개의 열로 쪼개기 위해 tidyr::separate 이용
+  separate(col = 신청일자, sep = '-', into = c('신청년', '신청월', '신청일')) %>%
+  # 신청년 열과 신청월 열을 하나의 열로 관리
+  # 두 개의 열을 하나의 열로 묶기 위해 다시 tidyr::unite로 묶는 과정
+  # 각 행을 신청년월로 분류하고자 이와같은 과정을 실시함
+  unite(col = 신청년월, 신청년, 신청월, sep = '')
+
+# 시각화를 위해 ggplot을 이용, 자금대분류 열로 색 구분을, 대출금액의 합계를 y축, 신청일을 x축으로 하고자 함
+ggplot(supportive_g_money_data_1, aes(fill = 자금대분류, y = 대출금액, x = 신청년월)) +
+  # 갯수를 세는 게 아닌, 이미 값이 구해져 있기 때문에 stat 파라미터를 identity로 설정하여야
+  geom_bar(position = "stack", stat = "identity") +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) 
+```

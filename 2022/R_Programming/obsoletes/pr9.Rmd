@@ -1,0 +1,204 @@
+---
+title: "PR9 - Package"
+author: "강현승"
+date: "2022-11-03"
+output: html_document
+---
+
+# 1. package 기본
+
+> 해당 실습에서 자주 나오는 패키지 설치를 반복하면 문서 생성 시 에러가 나기 때문에, 설치가 되었다면 주석 처리 해주시고 Rmd에서는 패키지를 불러오는 코드만 포함시키시면 됩니다. 추가로 패키지 설치는 Rmd보다는 
+Script에서 진행해주시는게 좋습니다.
+
+- R에서 기본적으로 제공하는 함수 외에 다른 프로그래머들이 필요하다고 생각해서 만들어 놓은 함수들의 모음
+- 이것을 보통 library 또는 API라고 칭함
+- R에서는 보통 CRAN에서 R재단이 인정한 패키지들을 공유
+- 비공식적이지만 개인이 만들어서 공유하는 패키지들이 있는데 보통 github에 업로드되어 있음
+
+## 1.1. 설치
+
+- 설치 명령어: `install.packages()`
+- 다음 시간 사용할 크롤링 관련 페키지 설치
+
+```{r}
+# install.packages("ryest")
+# install.packages("httr")
+# install.packages("RSelenium")
+```
+
+## 1.2. 불러오기
+
+- 패키지를 불러오는 방법은 크게 두 가지가 있습니다.
+  - library(package이름): 설치되어 있는 패키지를 불러옴
+  - require(package이름): 불러오려는 시도를 하고 logical한 return 값을 반환
+
+- `require()`도 결과적으로 `library()`와 동일한 기능을 하지만, 결과 값에서 차이가 나게 됩니다.
+  - `library()`는 패키지를 불러오는 것으로, 패키지가 없다면 에러 메세지를 반환할 것입니다.
+  - 하지만 `require()`는 패키지가 없다고 해서 에러메세지를 반환하는 것이 아닌, 패키지 유무에 대한 논리 값을 반환할 것입니다.
+  
+```{r}
+x = library(rvest)
+x
+x = require(rvest)
+x
+
+# 해당 패키지가 없다고 에러가 뜨면서 결과 knit 시 에러가 발생할 수 있는 부분입니다.
+# library(chron)
+
+# 해당 패키지가 없어서 에로가 뜨지 않고 knit를 정상적으로 할 수 있습니다.
+require(chron)
+```
+
+## 1.3. 패키지 업데이트
+
+- 패키지 개발자가 자신이 만든 패키지의 기능을 보안하거나 R 버전이 업데이트 되어 호환이 되도록 수정하거나 오류를 수정
+- 명령어는 `update.packages(패키지 이름)`
+- RStudio를 사용하는 경우 우측 하단의 packages 탭의 update 항목을 통해 원하는 패키지 혹은 전체 패키지의 업데이트 가능
+
+```{r}
+# update.packages('rvest)
+```
+
+## 1.4. 불러온 패키지 사용 중지
+
+```{r}
+# detach('package:ggplot2', unload = T)
+```
+
+# 2. package 고급
+
+## 2.1. package에서 함수 가져오기
+
+- 다양한 패키지들을 불러오다 보면, 동일한 함수명을 사용해서 서로 충돌할 때가 있습니다.
+- 그럴 때는 `패키지명::함수명`으로 어떤 패키지에서 해당 함수를 사용할 것인지 명시해서 문제를 해결할 수 있습니다.
+
+```{r}
+# require(plyr)
+# require(Hmisc)
+# require(chron)
+# require(tseries)
+# 
+# plyr::summarize()
+# Hmisc:summarize()
+# 
+# chron::is.weekend()
+# tseries::is.weekend()
+```
+
+
+- **실습**: 본인이 최근 사용해 본 패키지에서 해당 사용법으로 패키지 함수를 하나 사용해보시기 바랍니다.
+
+```{r}
+# install.packages('rjson')
+# install.packages('jsonlite')
+# install.packages('httr')
+
+library(httr)
+library(rjson)
+library(jsonlite)
+
+url = 'https://jsonplaceholder.typicode.com/comments'
+
+by_rjson = rjson::fromJSON(json_str = content(GET(url), as = 'text'))
+by_jsonlite = jsonlite::fromJSON(url)
+```
+
+## 2.2. 패키지 삭제
+
+- 패키지의 재설치가 필요하거나, 더 이상 쓸모가 없어진 패키지들을 삭제해야 할 필요가 있을때, `remove.packages()`를 사용합니다.
+
+```{r}
+# remove.packages("rvest")
+```
+
+## 2.3. 편리한 사용자 정의 함수
+
+- 해당 함수는 패키지명으로 구성된 문자형 벡터를 입력으로 받아서, 설치 및 불러오기를 동시에 진행하는 함수입니다.
+- 만약 해당 패키지가 이미 설치되어 있는 패키지라면 바로 설치과정을 생략하고 바로 불러오기를 진행하게 됩니다.
+
+```{r}
+take = function(x) {
+  for (i in x) {
+    if (!is.element(i, .packages(all.available = TRUE))) {
+      install.packages(i)
+    }
+    library(i, character.only = TRUE)
+  }
+}
+
+take(c("rvest", "httr"))
+```
+
+# 3. `devtools`
+
+- `devtools`의 주목적은 패키지 개발에 필요한 많은 작업들을 단순화시키는 것인데, 뿐만 아니라 비공식패키지의 설치와 패키지 버전 관리 측면에서도 상당히 중요한 패키지입니다.
+
+## 3.1. 비공식 패키지 설치
+
+- CRAN에서 제공하는 패키지가 아닌, github에 공개되어 있는 다양한 패키지들도 설치하여 사용할 수 있습니다.
+
+```{r}
+# install.packages("devtools")
+library(devtools)
+# install_github("패키지")
+```
+
+## 3.2. 원하는 버전 설치
+
+- R의 패키지들이 최신 버전에 맞춰서 업데이트가 되지 않았다면, 이전 버전의 패키지를 사용해야만 할 경우들이 있으며 이때 사용하는 것이 `devtools`의 `install_version()`입니다.
+- install_version("패키지명", version="버전명", repos="http://cran.us.r-project.org")
+  - 패키지명과 어떤 버전명을 지정해주면 되며, **repos**는 어떤 서버에서 해당 내용을 다운받을지 지정해주는 것입니다.
+
+- 예시로 `ggplot2`를 들어보겠습니다. 2020년 05월 12일 기준 3.3.0이 최신버전인데, 0.9.1 버전을 설치해보는 것으로 하겠습니다.
+- 이미 `ggplot2`가 설치되어 있으신 분들은 앞에서 배운 패키지 삭제를 통해 삭제하고 진행해주십시오.
+
+```{r}
+# library(devtools)
+
+# remove.packages("ggplot2")
+# install_version("ggplot2", version = "0.9.1", repos = "http://cran.us.r-project.org")
+# packageVersion("ggplot2") # 설치된 패키지 버전 체크
+```
+
+- 이 과정을 실습해보셨다면 `ggplot2`를 지워주시고, 밑의 `tidyverse`로 설치를 진행해주시면 됩니다.
+
+```{r}
+# remove.packages("ggplot2")
+```
+
+# 4.`tidyverse`
+
+`tidyverse`는`dplyr`, `tidyr`, `ggplot2` 등, R 프로그래밍의 핵심패키지들을 한번에 설치 및 관리해주는 패키지입니다.
+
+```{r}
+# install.packages("tidverse")
+# install.packages("glue")
+library(tidyverse)
+```
+
+# PR9 연습문제
+
+```{r}
+# install.packages('devtools')
+# install.packages('roxygen2')
+# library(devtools)
+# library(roxygen2)
+# 
+# setwd('create-r-package-practice/')
+# getwd()
+# package.skeleton(name = 'addnumbers',
+#                  code_files = c('add_fun.R'))
+# roxygenize('addnumbers')
+```
+
+<img src="data:image/png;base64,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">
+
+## PR9 연습 결과
+
+깃헙 리포에 패키지 올려서 설치 후 결과
+[https://github.com/khskeb0513/create-r-package-practice](https://github.com/khskeb0513/create-r-package-practice)
+
+```{r}
+# devtools::install_github('khskeb0513/create-r-package-practice')
+addnumbers::add_fun(1, 2, 3, 4, 5)
+```

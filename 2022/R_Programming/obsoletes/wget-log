@@ -1,0 +1,17 @@
+--2022-10-21 15:12:09--  https://docs.google.com/uc?id=1fqB9V7IjV0tR8Lpv6gMVq_RZ68UI9ueI
+Resolving docs.google.com (docs.google.com)... 142.250.76.142
+Connecting to docs.google.com (docs.google.com)|142.250.76.142|:443... connected.
+HTTP request sent, awaiting response... 303 See Other
+Location: https://doc-0g-60-docs.googleusercontent.com/docs/securesc/ha0ro937gcuc7l7deffksulhg5h7mbp1/96iqe0n6gvos52idqi1v0fovtu0dm5fk/1666332675000/09454274795818962638/*/1fqB9V7IjV0tR8Lpv6gMVq_RZ68UI9ueI?uuid=80086c05-1f82-47fe-a2ef-6076a4426774 [following]
+Warning: wildcards not supported in HTTP.
+--2022-10-21 15:12:12--  https://doc-0g-60-docs.googleusercontent.com/docs/securesc/ha0ro937gcuc7l7deffksulhg5h7mbp1/96iqe0n6gvos52idqi1v0fovtu0dm5fk/1666332675000/09454274795818962638/*/1fqB9V7IjV0tR8Lpv6gMVq_RZ68UI9ueI?uuid=80086c05-1f82-47fe-a2ef-6076a4426774
+Resolving doc-0g-60-docs.googleusercontent.com (doc-0g-60-docs.googleusercontent.com)... 142.250.206.225
+Connecting to doc-0g-60-docs.googleusercontent.com (doc-0g-60-docs.googleusercontent.com)|142.250.206.225|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 21899 (21K) [text/csv]
+Saving to: ‘uc?id=1fqB9V7IjV0tR8Lpv6gMVq_RZ68UI9ueI’
+
+                uc?id=1fqB9V7Ij   0%[                                                      ]       0  --.-KB/s               uc?id=1fqB9V7IjV0tR8Lpv6gMVq_RZ 100%[=====================================================>]  21.39K  --.-KB/s    in 0.1s    
+
+2022-10-21 15:12:14 (176 KB/s) - ‘uc?id=1fqB9V7IjV0tR8Lpv6gMVq_RZ68UI9ueI’ saved [21899/21899]
+

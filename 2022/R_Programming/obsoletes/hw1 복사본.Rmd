@@ -1,0 +1,126 @@
+---
+title: "HW1-1 공공데이터포털 데이터 다뤄보기"
+author: "강현승"
+date: "2022-10-17"
+output: html_document
+---
+
+```{r}
+DEBUG = F # 보고용
+```
+
+## 문제 1
+
+```{r}
+# install.packages('xml2')
+library(xml2)
+
+serviceKey = 'MlB2k1cGG%2BUDm0OzU5rF8b8ESs7u1y2mmBmt6E%2BOeHdAg5mO%2F7bx1dJDMPqCA2LgAe2E2H9jaodeKzU8IbFr4g%3D%3D'
+numOfRows = 10
+pageNo = '0'
+chrstnType = ''
+filterValues = ''
+dataType = 'xml'
+url_xml = paste0(
+  'https://apis.data.go.kr/3740000/suwonEvChrstn/getdatalist?serviceKey=' ,
+  serviceKey,
+  '&numOfRows=',
+  numOfRows,
+  '&pageNo=',
+  pageNo,
+  '&sortKey=',
+  chrstnType,
+  '&filterKey=',
+  chrstnType,
+  '&filterValues=',
+  filterValues,
+  '&type=',
+  dataType
+)
+
+# urls 링크를 xml로 읽어들이기.
+# read xml(): xml 파일 읽어들이기.
+raw_xml <- read_xml(url_xml)
+
+# occrrnc0t. dataVall 변수 모두 찾아서 저장하기
+# xml_find_all(): xml 파일에서 원하는 '태그'를 찾아 저장.
+
+xml_1 <- xml_find_all(raw_xml, '//chrstnNm')
+xml_2 <- xml_find_all(raw_xml, '//latitude')
+xml_3 <- xml_find_all(raw_xml, '//longitude')
+xml_4 <- xml_find_all(raw_xml, '//charger_status')
+
+# text로 읽어 저장하기
+# xml text( :) 텍스트 추출.
+chrstnNm <- xml_text(xml_1)
+latitude <- xml_text(xml_2)
+longitude <- xml_text(xml_3)
+charger_status <- xml_text(xml_4)
+```
+
+## 문제 2
+
+```{r}
+df = data.frame(
+  chrstnNm = chrstnNm,
+  latitude = latitude,
+  longitude = longitude,
+  charger_status = charger_status
+)
+head(df)
+```
+
+## 문제 3
+
+```{r}
+str(df)
+# 문제점) 위도(latitude)와 경도(longitude)를 character형에서 numeric으로 변경하여야.
+df$latitude = as.numeric(df$latitude)
+df$longitude = as.numeric(df$longitude)
+str(df) # df가 고쳐졌는지 확인
+```
+
+## 문제 4
+
+```{r}
+# for 구문이 돌면서 여기에 추가로 계속 저장함
+df = data.frame()
+# 0 번째 페이지부터 11 번째 페이지까지 데이터를 가져오고자 함
+# 따라서 for 구문으로 0 부터 11 까지 반복되는 pageNo 변수를 가짐
+for (pageNo in 0:11) {
+  numOfRows = 10
+  dataType = 'xml'
+  url_xml = paste0(
+    'https://apis.data.go.kr/3740000/suwonEvChrstn/getdatalist?serviceKey=' ,
+    serviceKey,
+    '&pageNo=',
+    pageNo,
+    '&type=',
+    dataType,
+    '&numOfRows=',
+    numOfRows,
+    '&sortKey=&filterKey=&filterValues='
+  )
+  raw_xml <- read_xml(url_xml)
+  xml_1 <- xml_find_all(raw_xml, '//chrstnNm')
+  xml_2 <- xml_find_all(raw_xml, '//latitude')
+  xml_3 <- xml_find_all(raw_xml, '//longitude')
+  xml_4 <- xml_find_all(raw_xml, '//charger_status')
+  chrstnNm <- xml_text(xml_1)
+  latitude <- as.numeric(xml_text(xml_2))
+  longitude <- as.numeric(xml_text(xml_3))
+  charger_status <- xml_text(xml_4)
+  # 위의 변수인 df 에 rbind, 즉 행 추가를 통해 이번 for 구문을 통해 가져온 데이터를 추가함
+  df = rbind(
+    df,
+    list(
+      chrstnNm = chrstnNm,
+      latitude = latitude,
+      longitude = longitude,
+      charger_status = charger_status
+    )
+  )
+}
+str(df)
+head(df)
+```
